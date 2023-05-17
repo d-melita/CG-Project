@@ -13,6 +13,8 @@ var cameras = [];
 
 var geometry, material, mesh;
 
+var reboque;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -25,6 +27,8 @@ function createScene() {
 
     // set the scene background with light color
     scene.background = new THREE.Color(0xccf7ff);
+
+    createReboque(0, 0, 0);
 }
 
 //////////////////////
@@ -53,22 +57,22 @@ function createCameras() {
   
     // Top Orthographic Camera
     cameras.push(
-      createOrthographicCamera(-10, 10, 10, -10, new THREE.Vector3(0, 20, 0))
+      createOrthographicCamera(-30, 30, 30, -30, new THREE.Vector3(0, 20, 0))
     );
   
     // Side Orthographic Camera
     cameras.push(
-      createOrthographicCamera(-10, 10, 10, -10, new THREE.Vector3(20, 0, 0))
+      createOrthographicCamera(-30, 30, 30, -30, new THREE.Vector3(20, 0, 0))
     );
   
     // Front Orthographic Camera
     cameras.push(
-      createOrthographicCamera(-10, 10, 10, -10, new THREE.Vector3(0, 0, 20))
+      createOrthographicCamera(-30, 30, 30, -30, new THREE.Vector3(0, 0, 20))
     );
   
     // Isometric Orthographic Camera
     cameras.push(
-      createOrthographicCamera(-10, 10, 10, -10, new THREE.Vector3(20, 20, 20))
+      createOrthographicCamera(-30, 30, 30, -30, new THREE.Vector3(20, 20, 20))
     );
   
     // Perspective Camera
@@ -90,6 +94,45 @@ function switchCamera(camera) {
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
+
+function addReboqueBase(obj, x, y, z) {
+    'use strict';
+
+    geometry = new THREE.BoxGeometry(6, 8, 8);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    obj.add(mesh);
+}
+
+function addReboqueWheel(obj, x, y, z) {
+    'use strict';
+
+    geometry = new THREE.CylinderGeometry(2, 2, 1, 32);
+    geometry.rotateX(Math.PI/2);
+    geometry.rotateY(Math.PI/2);
+    material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: false });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    obj.add(mesh);
+}
+
+function createReboque(x, y, z) {
+    'use strict';
+
+    reboque = new THREE.Object3D();
+
+    material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
+
+    addReboqueBase(reboque, 0, 4, 0);
+    addReboqueWheel(reboque, -3, 0, -2);
+    addReboqueWheel(reboque, 3, 0, -2);
+    
+    scene.add(reboque);
+
+    reboque.position.x = x;
+    reboque.position.y = y;
+    reboque.position.z = z;
+}
 
 //////////////////////
 /* CHECK COLLISIONS */
@@ -193,6 +236,19 @@ function onKeyDown(e) {
             break;
         case 53: // 5
             switchCamera(cameras[4]);
+            break;
+        // case arrow keys: move reboque
+        case 37: // left arrow
+            reboque.position.x -= 0.1;
+            break;
+        case 38: // up arrow
+            reboque.position.z -= 0.1;
+            break;
+        case 39: // right arrow
+            reboque.position.x += 0.1;
+            break;
+        case 40: // down arrow
+            reboque.position.z += 0.1;
             break;
         default:
             break;
