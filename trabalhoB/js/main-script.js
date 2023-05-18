@@ -8,8 +8,10 @@
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
+
 var camera, scene, renderer;
-var trailer, transformer, inferiorBody, superiorBody, leftArm, rightArm, head, feet;
+
+var trailer, transformer, inferiorBody, superiorBody, arm, head, feet;
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
@@ -27,6 +29,8 @@ const ESCAPE_RADIUS = 0.5, ESCAPE_HEIGHT = 4, ESCAPE_OFFSET = 2;
 const X_HEAD = 2, Y_HEAD = 2, Z_HEAD = 2;
 const EYE_RADIUS = 0.25;
 const X_ANTENNA = 0.5, Y_ANTENNA = 0.5, Z_ANTENNA = 0.5;
+
+var keys = {};
 
 ////////////////////////////////
 /* INITIALIZE ANIMATION CYCLE */
@@ -46,19 +50,25 @@ function init() {
 
     window.addEventListener("resize", onResize);
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
 }
 
 ////////////
 /* UPDATE */
 ////////////
+
 function update(){
     'use strict';
 
+    for (const [key, val] of Object.entries(keys)) {
+        val.call();
+    }
 }
 
 /////////////
 /* DISPLAY */
 /////////////
+
 function render() {
     'use strict';
 
@@ -72,7 +82,9 @@ function render() {
 function animate() {
     'use strict';
 
+    update();
     render();
+
     requestAnimationFrame(animate);
 
 }
@@ -85,7 +97,7 @@ function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
-    scene.add(new THREE.AxisHelper(20));
+    scene.add(new THREE.AxesHelper(20));
     scene.background = new THREE.Color(BACKGROUND_COLOR);
 
     addTrailer(0, 0, -10);
@@ -443,8 +455,14 @@ function onResize() {
 function onKeyDown(e) {
     'use strict';
 
-    // switch between cameras
+    function onLeftKeyDown() { trailer.position.x -= 0.1; }
+    function onRightKeyDown() { trailer.position.x += 0.1; }
+    function onUpKeyDown() { trailer.position.z += 0.1; }
+    function onDownKeyDown() { trailer.position.z -= 0.1; }
+
     switch (e.keyCode) {
+
+        // switch cameras
         case 49: // 1
             switchCamera(getTopCamera());
             break;
@@ -466,19 +484,24 @@ function onKeyDown(e) {
                     node.material.wireframe = !node.material.wireframe;
                 }
             });
+
         // case arrow keys: move trailer
         case 37: // left arrow
-            trailer.position.x -= 0.1;
+            keys[37] = onLeftKeyDown;
             break;
         case 38: // up arrow
-            trailer.position.z += 0.1;
+            keys[38] = onUpKeyDown;
             break;
         case 39: // right arrow
-            trailer.position.x += 0.1;
+            keys[39] = onRightKeyDown;
             break;
         case 40: // down arrow
-            trailer.position.z -= 0.1;
+            keys[40] = onDownKeyDown;
             break;
+
+        // case letters: transition between truck and transformer
+        // TODO
+
         default:
             break;
     }
@@ -491,4 +514,5 @@ function onKeyDown(e) {
 function onKeyUp(e){
     'use strict';
 
+    delete keys[e.keyCode];
 }
