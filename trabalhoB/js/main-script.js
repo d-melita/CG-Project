@@ -140,6 +140,30 @@ function switchCamera(new_camera) {
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 
+function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degree, color) {
+    'use strict';
+
+    var geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
+    switch (rotation_axis) {
+      case 'x':
+        geometry.rotateX(rotation_degree);
+        break;
+      case 'y':
+        geometry.rotateY(rotation_degree);
+        break;
+      case 'z':
+        geometry.rotateZ(rotation_degree);
+        break;
+      default:
+        break;
+    }
+    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+    var cylinder = new THREE.Mesh(geometry, material);
+
+    cylinder.position.set(x, y, z);
+    obj.add(cylinder);
+}
+
 function addBox(obj, x, y, z, length, height, width, color) {
     'use strict';
 
@@ -154,14 +178,10 @@ function addBox(obj, x, y, z, length, height, width, color) {
 function addWheel(obj, x, y, z) {
     'use strict';
 
-    var geometry = new THREE.CylinderGeometry(
-      WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_HEIGHT, 32
-    );
-    geometry.rotateZ(Math.PI/2);
-    var material = new THREE.MeshBasicMaterial({color: BLACK, wireframe: false});
-    var wheel = new THREE.Mesh(geometry, material);
+    var wheel = new THREE.Object3D();
 
-    wheel.position.set(x, y, z);
+    addCylinder(wheel, x, y, z, WHEEL_RADIUS, WHEEL_HEIGHT, 'z', Math.PI/2, BLACK);
+
     obj.add(wheel);
 }
 
@@ -181,19 +201,14 @@ function addLeg(obj, left) {
     'use strict';
 
     var leg = new THREE.Object3D();
+    var x_mult;
+    if (left) x_mult = 1; else x_mult = -1;
 
-      addBox(leg, 0, 0, 0, X_LEG, Y_LEG, Z_LEG, BLUE);
-    if (left) {
-      addWheel(leg, X_LEG/2 + WHEEL_HEIGHT/2, -3.5, WHEEL_RADIUS - Z_LEG/2);
-      addWheel(leg, X_LEG/2 + WHEEL_HEIGHT/2, 0.5, WHEEL_RADIUS - Z_LEG/2);
+    addBox(leg, 0, 0, 0, X_LEG, Y_LEG, Z_LEG, BLUE);
+    addWheel(leg, x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), BACK_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2);
+    addWheel(leg, x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), MIDDLE_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2);
 
-      leg.position.set(X_LEG/2, 0, 0);
-    } else {
-      addWheel(leg, - X_LEG/2 - WHEEL_HEIGHT/2, -3.5, WHEEL_RADIUS - Z_LEG/2);
-      addWheel(leg, - X_LEG/2 - WHEEL_HEIGHT/2, 0.5, WHEEL_RADIUS - Z_LEG/2);
-
-      leg.position.set(-X_LEG/2, 0, 0);
-    }
+    leg.position.set(x_mult * X_LEG/2, 0, 0);
 
     obj.add(leg);
 }
@@ -245,14 +260,110 @@ function addInferiorBody(obj) {
     obj.add(inferiorBody);
 }
 
-function addAbdomen() {}
+function addAntennas(obj) {
+    'use strict';
+
+    var antennas = new THREE.Object3D();
+
+    addBox(antennas, X_HEAD/2 - X_ANTENNA/2, 0, 0, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
+    addBox(antennas, - X_HEAD/2 + X_ANTENNA/2, 0, 0, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
+
+    antennas.position.set(0, Y_HEAD/2 + Y_ANTENNA/2, 0);
+    obj.add(antennas);
+}
+
+function addEyes(obj) {
+    'use strict';
+
+    var eyes = new THREE.Object3D();
+
+    addCylinder(eyes, X_HEAD/4, Y_HEAD/4, Z_HEAD/2, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, -X_HEAD/4, Y_HEAD/4, Z_HEAD/2, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
+
+    obj.add(eyes);
+}
+
+function addHead(obj) {
+    'use strict';
+
+    var head = new THREE.Object3D();
+
+    addBox(head, 0, 0, 0, X_HEAD, Y_HEAD, Z_HEAD, RED);
+    addAntennas(head);
+    addEyes(head);
+
+    head.position.set(0, Y_CHEST/2 + Y_HEAD/2, Z_HEAD/2 - Z_CHEST/2);
+    obj.add(head);
+}
+
+function addArm(obj, left) {
+    'use strict';
+
+    var arm = new THREE.Object3D();
+    var x_mult; if(left) x_mult = 1; else x_mult = -1;
+
+    addBox(arm, 0, 0, 0, X_ARM, Y_ARM, Z_ARM, RED);
+    addBox(arm, x_mult * (X_ARM/2 - X_FOREARM/2), -Y_ARM/2 - Y_FOREARM/2, - Z_ARM/2 + Z_FOREARM/2, X_FOREARM, Y_FOREARM, Z_FOREARM, RED)
+    addCylinder(arm, 0, ESCAPE_OFFSET, - Z_ARM/2 - ESCAPE_RADIUS, ESCAPE_RADIUS, ESCAPE_HEIGHT, '', 0, GREY);
+
+    arm.position.set(x_mult * (X_CHEST/2 - X_ARM/2), 0, - Z_CHEST/2 - Z_ARM/2);
+    obj.add(arm);
+}
+
+function addArms(obj) {
+    'use strict';
+
+    var arms = new THREE.Object3D();
+    addArm(arms, true);
+    addArm(arms, false);
+
+    obj.add(arms);
+}
+
+function addChest(obj) {
+    'use strict';
+
+    var chest = new THREE.Object3D();
+
+    addArms(chest);
+    addHead(chest);
+    addBox(chest, 0, 0, 0, X_CHEST, Y_CHEST, Z_CHEST, RED);
+
+    chest.position.set(0, Y_ABDOMEN + Y_CHEST/2, Z_CHEST/2);
+    obj.add(chest);
+}
+
+function addAbdomen(obj) {
+    'use strict';
+
+    var abdomen = new THREE.Object3D();
+
+    addBox(abdomen, 0, Y_ABDOMEN/2, Z_ABDOMEN/2, X_ABDOMEN, Y_ABDOMEN, Z_ABDOMEN, RED);
+
+    obj.add(abdomen);
+}
+
+function addWaist(obj) {
+    'use strict';
+
+    var waist = new THREE.Object3D();
+
+    addBox(waist, 0, 0, 0, X_WAIST, Y_WAIST, Z_WAIST, GREY);
+    addWheel(waist, X_WAIST/2 - WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS);
+    addWheel(waist, - X_WAIST/2 + WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS);
+
+    waist.position.set(0, - Y_WAIST/2, Z_CHEST - Z_WAIST/2);
+    obj.add(waist);
+}
 
 function addSuperiorBody(obj) {
     'use strict';
 
     superiorBody = new THREE.Object3D();
 
-    addAbdomen();
+    addWaist(superiorBody);
+    addAbdomen(superiorBody);
+    addChest(superiorBody);
 
     superiorBody.position.set(0, Y_LEG + Y_TIGHT, 0);
     obj.add(superiorBody);
