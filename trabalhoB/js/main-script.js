@@ -14,10 +14,10 @@ var camera, scene, renderer;
 var trailer, transformer, inferiorBody, leftArm, rightArm, head, feet;
 
 var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
-var armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.01;
-var feetMinRotation = 0, feetMaxRotation = Math.PI, feetRotationSpeed = 0.01;
-var legsMinRotation = 0, legsMaxRotation = Math.PI/2, legsRotationSpeed = 0.01;
-var headMinRotation = -Math.PI, headMaxRotation = 0, headRotationSpeed = 0.01;
+var armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.04;
+var feetMinRotation = 0, feetMaxRotation = Math.PI, feetRotationSpeed = 0.04;
+var legsMinRotation = 0, legsMaxRotation = Math.PI/2, legsRotationSpeed = 0.02;
+var headMinRotation = -Math.PI, headMaxRotation = 0, headRotationSpeed = 0.04;
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
@@ -107,7 +107,7 @@ function createScene() {
     scene.background = new THREE.Color(BACKGROUND_COLOR);
 
     addTrailer(0, 0, -10);
-    addTransformer(0, 0, 0);
+    addTransformer(0, -Y_LEG, 0);
 }
 
 //////////////////////
@@ -116,32 +116,32 @@ function createScene() {
 
 function getOrthographicCamera(pos_x, pos_y, pos_z) {
   const camera = new THREE.OrthographicCamera(-30, 30, 30, -30, 1, 100);
-  camera.position.copy(new THREE.Vector3(pos_x, pos_y, pos_z));
+  camera.position.set(pos_x, pos_y, pos_z);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   return camera
 }
 
 function getTopCamera() {
-  return getOrthographicCamera(0, 20, 0);
+  return getOrthographicCamera(0, 30, 0);
 }
 
 function getSideCamera() {
-  return getOrthographicCamera(20, 0, 0);
+  return getOrthographicCamera(30, 0, 0);
 }
 
 function getFrontCamera() {
-  return getOrthographicCamera(0, 0, 20);
+  return getOrthographicCamera(0, 0, 30);
 }
 
 function getIsometricCamera() {
-  return getOrthographicCamera(20, 20, 20);
+  return getOrthographicCamera(30, 30, 30);
 }
 
 function getPerspectiveCamera() {
   const camera = new THREE.PerspectiveCamera(
     75, window.innerWidth / window.innerHeight, 0.1, 100
   );
-  camera.position.copy(new THREE.Vector3(20, 20, 20));
+  camera.position.set(30, 30, 30);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   return camera;
 }
