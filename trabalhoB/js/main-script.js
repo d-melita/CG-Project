@@ -11,7 +11,13 @@
 
 var camera, scene, renderer;
 
-var trailer, transformer, inferiorBody, superiorBody, arm, head, feet;
+var trailer, transformer, inferiorBody, leftArm, rightArm, head, feet;
+
+var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
+var armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.01;
+var feetMinRotation = 0, feetMaxRotation = Math.PI, feetRotationSpeed = 0.01;
+var legsMinRotation = 0, legsMaxRotation = Math.PI/2, legsRotationSpeed = 0.01;
+var headMinRotation = -Math.PI, headMaxRotation = 0, headRotationSpeed = 0.01;
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
@@ -277,8 +283,8 @@ function addAntennas(obj) {
 
     var antennas = new THREE.Object3D();
 
-    addBox(antennas, X_HEAD/2 - X_ANTENNA/2, 0, 0, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
-    addBox(antennas, - X_HEAD/2 + X_ANTENNA/2, 0, 0, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
+    addBox(antennas, X_HEAD/2 - X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
+    addBox(antennas, - X_HEAD/2 + X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
 
     antennas.position.set(0, Y_HEAD/2 + Y_ANTENNA/2, 0);
     obj.add(antennas);
@@ -289,8 +295,8 @@ function addEyes(obj) {
 
     var eyes = new THREE.Object3D();
 
-    addCylinder(eyes, X_HEAD/4, Y_HEAD/4, Z_HEAD/2, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
-    addCylinder(eyes, -X_HEAD/4, Y_HEAD/4, Z_HEAD/2, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, -X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
 
     obj.add(eyes);
 }
@@ -298,13 +304,13 @@ function addEyes(obj) {
 function addHead(obj) {
     'use strict';
 
-    var head = new THREE.Object3D();
+    head = new THREE.Object3D();
 
-    addBox(head, 0, 0, 0, X_HEAD, Y_HEAD, Z_HEAD, RED);
+    addBox(head, 0, Y_HEAD/2, Z_HEAD/2, X_HEAD, Y_HEAD, Z_HEAD, RED);
     addAntennas(head);
     addEyes(head);
 
-    head.position.set(0, Y_CHEST/2 + Y_HEAD/2, Z_HEAD/2 - Z_CHEST/2);
+    head.position.set(0, Y_CHEST/2, -Z_CHEST/2);
     obj.add(head);
 }
 
@@ -320,14 +326,16 @@ function addArm(obj, left) {
 
     arm.position.set(x_mult * (X_CHEST/2 - X_ARM/2), 0, - Z_CHEST/2 - Z_ARM/2);
     obj.add(arm);
+
+    return arm;
 }
 
 function addArms(obj) {
     'use strict';
 
     var arms = new THREE.Object3D();
-    addArm(arms, true);
-    addArm(arms, false);
+    leftArm = addArm(arms, true);
+    rightArm = addArm(arms, false);
 
     obj.add(arms);
 }
@@ -371,7 +379,7 @@ function addWaist(obj) {
 function addSuperiorBody(obj) {
     'use strict';
 
-    superiorBody = new THREE.Object3D();
+    var superiorBody = new THREE.Object3D();
 
     addWaist(superiorBody);
     addAbdomen(superiorBody);
@@ -460,6 +468,57 @@ function onKeyDown(e) {
     function onUpKeyDown() { trailer.position.z += 0.1; }
     function onDownKeyDown() { trailer.position.z -= 0.1; }
 
+    function onQKeyDown() { 
+        if (feetRotation < feetMaxRotation) {
+            feetRotation += feetRotationSpeed;
+            feet.rotateX(feetRotationSpeed); 
+        }
+    }
+    function onAKeyDown() { 
+        if (feetRotation > feetMinRotation) {
+            feetRotation -= feetRotationSpeed;
+            feet.rotateX(-feetRotationSpeed);
+        }
+    }
+    function onWKeyDown() { 
+        if (legsRotation < legsMaxRotation) {
+            legsRotation += legsRotationSpeed;
+            inferiorBody.rotateX(legsRotationSpeed); 
+        }
+    }
+    function onSKeyDown() { 
+        if (legsRotation > legsMinRotation) {
+            legsRotation -= legsRotationSpeed;
+            inferiorBody.rotateX(-legsRotationSpeed);
+        }
+    }
+    function onEKeyDown() { 
+        if (armsShift < armsMaxShift) {
+            armsShift += armsShiftSpeed;
+            leftArm.position.x += armsShiftSpeed;
+            rightArm.position.x -= armsShiftSpeed;
+        }
+    }
+    function onDKeyDown() {
+        if (armsShift > armsMinShift) {
+            armsShift -= armsShiftSpeed;
+            leftArm.position.x -= armsShiftSpeed;
+            rightArm.position.x += armsShiftSpeed;
+        }
+    }
+    function onRKeyDown() { 
+        if (headRotation < headMaxRotation) {
+            headRotation += headRotationSpeed;
+            head.rotateX(headRotationSpeed); 
+        }
+    }
+    function onFKeyDown() { 
+        if (headRotation > headMinRotation) {
+            headRotation -= headRotationSpeed;
+            head.rotateX(-headRotationSpeed);
+        }
+    }
+
     switch (e.keyCode) {
 
         // switch cameras
@@ -484,6 +543,7 @@ function onKeyDown(e) {
                     node.material.wireframe = !node.material.wireframe;
                 }
             });
+            break;
 
         // case arrow keys: move trailer
         case 37: // left arrow
@@ -500,7 +560,30 @@ function onKeyDown(e) {
             break;
 
         // case letters: transition between truck and transformer
-        // TODO
+        case 81: // Q
+            keys[81] = onQKeyDown;
+            break;
+        case 65: // A
+            keys[65] = onAKeyDown;
+            break;
+        case 87: // W
+            keys[87] = onWKeyDown;
+            break;
+        case 83: // S
+            keys[83] = onSKeyDown;
+            break;
+        case 69: // E
+            keys[69] = onEKeyDown;
+            break;
+        case 68: // D
+            keys[68] = onDKeyDown;
+            break;
+        case 82: // R
+            keys[82] = onRKeyDown;
+            break;
+        case 70: // F
+            keys[70] = onFKeyDown;
+            break;
 
         default:
             break;
