@@ -13,7 +13,7 @@ var cameras = [];
 
 var geometry, material, mesh;
 
-var trailer;
+var trailer, transformer, inferiorBody, superiorBody, leftArm, rightArm, head, feet;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -28,7 +28,8 @@ function createScene() {
     // set the scene background with light color
     scene.background = new THREE.Color(0xccf7ff);
 
-    createTrailer(0, 0, 0);
+    createTrailer(0, 0, -10);
+    createTransformer(0, 0, 0);
 }
 
 //////////////////////
@@ -95,39 +96,20 @@ function switchCamera(camera) {
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 
-function addTrailerBase(obj, x, y, z) {
+function createBox(obj, x, y, z, length, height, width, color) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(6, 3, 10);
-    material = new THREE.MeshBasicMaterial({ color: 0xa8a8a8, wireframe: false });
+    geometry = new THREE.BoxGeometry(length, height, width);
+    material = new THREE.MeshBasicMaterial({ color: color, wireframe: false });
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     obj.add(mesh);
 }
 
-function addTrailerTop(obj, x, y, z) {
-    'use strict';
-    geometry = new THREE.BoxGeometry(8, 5, 24);
-    material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    obj.add(mesh);
-}
-
-function addTrailerPart(obj, x, y, z) {
+function addWheel(obj, x, y, z, top, bottom, height) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(2, 1, 1);
-    material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: false });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    obj.add(mesh);
-}
-
-function addWheel(obj, x, y, z) {
-    'use strict';
-
-    geometry = new THREE.CylinderGeometry(1.5, 1.5, 1, 32);
+    geometry = new THREE.CylinderGeometry(top, bottom, height, 32);
     geometry.rotateX(Math.PI/2);
     geometry.rotateY(Math.PI/2);
     material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: false });
@@ -141,13 +123,13 @@ function createTrailer(x, y, z) {
 
     trailer = new THREE.Object3D();
 
-    addTrailerTop(trailer, 0, 6.5, 12);
-    addTrailerBase(trailer, 0, 2.5, 19);
-    addWheel(trailer, -3.5, 1.5, 17.5);
-    addWheel(trailer, 3.5, 1.5, 17.5);
-    addWheel(trailer, -3.5, 1.5, 21.5);
-    addWheel(trailer, 3.5, 1.5, 21.5);
-    addTrailerPart(trailer, 0, 3.5, 0.5);
+    createBox(trailer, 0, 6.5, 12, 8, 5, 24, 0xffffff); // trailer top
+    createBox(trailer, 0, 2.5, 19, 6, 3, 10, 0xa8a8a8); // trailer base
+    addWheel(trailer, -3.5, 1.5, 17.5, 1.5, 1.5, 1);
+    addWheel(trailer, 3.5, 1.5, 17.5, 1.5, 1.5, 1);
+    addWheel(trailer, -3.5, 1.5, 21.5, 1.5, 1.5, 1);
+    addWheel(trailer, 3.5, 1.5, 21.5, 1.5, 1.5, 1);
+    createBox(trailer, 0, 3.5, 0.5, 2, 1, 1, 0x000000); // trailer hitch
 
     trailer.rotateY(Math.PI);
     
@@ -158,7 +140,56 @@ function createTrailer(x, y, z) {
     trailer.position.z = z;
 }
 
+function createLegs(obj) {
+    'use strict';
+    var legs = new THREE.Object3D();
+    createBox(inferiorBody, -1.5, 5, 1, 3, 10, 2, 0x004bc4); //left leg
+    createBox(inferiorBody, 1.5, 5, 1, 3, 10, 2, 0x004bc4); // right leg
+    addWheel(legs, -3.5, 1.5, 1.5, 1.5, 1.5, 1); // left bottom wheel
+    addWheel(legs, -3.5, 5.5, 1.5, 1.5, 1.5, 1); // left top wheel
+    addWheel(legs, 3.5, 1.5, 1.5, 1.5, 1.5, 1); // right bottom wheel
+    addWheel(legs, 3.5, 5.5, 1.5, 1.5, 1.5, 1); // right top wheel
 
+    createBox(legs, -0.5, 11.5, 0.5, 1, 3, 1, 0x000000); // left leg tight
+    createBox(legs, 0.5, 11.5, 0.5, 1, 3, 1, 0x000000); // right leg tight
+    obj.add(legs);
+}
+
+function createFeet(obj) {
+    'use strict';
+
+    feet = new THREE.Object3D();
+    createBox(inferiorBody, -1.5, 1, 3, 3, 2, 2, 0x004bc4); // left foot
+    createBox(inferiorBody, 1.5, 1, 3, 3, 2, 2, 0x004bc4); // right foot
+
+    obj.add(feet);
+}
+
+function createInferiorBody(obj) {
+    'use strict';
+    inferiorBody = new THREE.Object3D();
+
+    createLegs(inferiorBody);
+    createFeet(inferiorBody);
+
+    obj.add(inferiorBody);
+}
+
+function createSuperiorBody(obj) {}
+
+function createTransformer(x, y, z) {
+    'use strict';
+
+    transformer = new THREE.Object3D();
+
+    createInferiorBody(transformer);
+    createSuperiorBody(transformer);
+
+    scene.add(transformer);
+    transformer.position.x = x;
+    transformer.position.y = y;
+    transformer.position.z = z;
+}
 
 //////////////////////
 /* CHECK COLLISIONS */
