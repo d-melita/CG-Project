@@ -108,7 +108,7 @@ function addTrailerBase(obj, x, y, z) {
 function addTrailerTop(obj, x, y, z) {
     'use strict';
     geometry = new THREE.BoxGeometry(8, 5, 24);
-    material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+    material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     obj.add(mesh);
@@ -124,7 +124,7 @@ function addTrailerPart(obj, x, y, z) {
     obj.add(mesh);
 }
 
-function addTrailerWheel(obj, x, y, z) {
+function addWheel(obj, x, y, z) {
     'use strict';
 
     geometry = new THREE.CylinderGeometry(1.5, 1.5, 1, 32);
@@ -143,11 +143,13 @@ function createTrailer(x, y, z) {
 
     addTrailerTop(trailer, 0, 6.5, 12);
     addTrailerBase(trailer, 0, 2.5, 19);
-    addTrailerWheel(trailer, -3.5, 1.5, 17.5);
-    addTrailerWheel(trailer, 3.5, 1.5, 17.5);
-    addTrailerWheel(trailer, -3.5, 1.5, 21.5);
-    addTrailerWheel(trailer, 3.5, 1.5, 21.5);
+    addWheel(trailer, -3.5, 1.5, 17.5);
+    addWheel(trailer, 3.5, 1.5, 17.5);
+    addWheel(trailer, -3.5, 1.5, 21.5);
+    addWheel(trailer, 3.5, 1.5, 21.5);
     addTrailerPart(trailer, 0, 3.5, 0.5);
+
+    trailer.rotateY(Math.PI);
     
     scene.add(trailer);
 
@@ -155,6 +157,8 @@ function createTrailer(x, y, z) {
     trailer.position.y = y;
     trailer.position.z = z;
 }
+
+
 
 //////////////////////
 /* CHECK COLLISIONS */
@@ -259,18 +263,24 @@ function onKeyDown(e) {
         case 53: // 5
             switchCamera(cameras[4]);
             break;
+        case 54: // 6
+            scene.traverse(function (node) {
+                if (node instanceof THREE.Mesh) {
+                    node.material.wireframe = !node.material.wireframe;
+                }
+            });
         // case arrow keys: move trailer
         case 37: // left arrow
             trailer.position.x -= 0.1;
             break;
         case 38: // up arrow
-            trailer.position.z -= 0.1;
+            trailer.position.z += 0.1;
             break;
         case 39: // right arrow
             trailer.position.x += 0.1;
             break;
         case 40: // down arrow
-            trailer.position.z += 0.1;
+            trailer.position.z -= 0.1;
             break;
         default:
             break;
