@@ -653,30 +653,49 @@ function onKeyDown(e) {
         }
     }
 
+    function on1KeyDown() {
+        switchCamera(getTopCamera());
+    }
+    function on2KeyDown() {
+        switchCamera(getSideCamera());
+    }
+    function on3KeyDown() {
+        switchCamera(getFrontCamera());
+    }
+    function on4KeyDown() {
+        switchCamera(getIsometricCamera());
+    }
+    function on5KeyDown() {
+        switchCamera(getPerspectiveCamera());
+    }
+    function on6KeyDown() {
+        scene.traverse(function (node) {
+            if (node instanceof THREE.Mesh) {
+                node.material.wireframe = !node.material.wireframe;
+            }
+        });
+    }
+
     switch (e.keyCode) {
 
         // switch cameras
         case 49: // 1
-            switchCamera(getTopCamera());
+            keys[49] = on1KeyDown;
             break;
         case 50: // 2
-            switchCamera(getSideCamera());
+            keys[50] = on2KeyDown;
             break;
         case 51: // 3
-            switchCamera(getFrontCamera());
+            keys[51] = on3KeyDown;
             break;
         case 52: // 4
-            switchCamera(getIsometricCamera());
+            keys[52] = on4KeyDown;
             break;
         case 53: // 5
-            switchCamera(getPerspectiveCamera());
+            keys[53] = on5KeyDown;
             break;
         case 54: // 6
-            scene.traverse(function (node) {
-                if (node instanceof THREE.Mesh) {
-                    node.material.wireframe = !node.material.wireframe;
-                }
-            });
+            keys[54] = on6KeyDown;
             break;
 
         // case arrow keys: move trailer
