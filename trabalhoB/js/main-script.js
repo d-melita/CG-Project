@@ -498,7 +498,7 @@ function checkTruckMode() {
     return Math.abs(headRotation - HEAD_MIN_ROTATION) < THRESHOLD &&
            Math.abs(feetRotation - FEET_MAX_ROTATION) < THRESHOLD &&
            Math.abs(legsRotation - LEGS_MAX_ROTATION) < THRESHOLD &&
-           Math.abs(armsRhift - ARMS_MIN_SHIFT) < THRESHOLD;
+           Math.abs(armsShift - ARMS_MIN_SHIFT) < THRESHOLD;
 }
 
 function checkTrailerPositioned() {
