@@ -15,10 +15,10 @@ var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, legsAndFeet, feet;
 
 var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
-const armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.04;
-const feetMinRotation = 0, feetMaxRotation = Math.PI, feetRotationSpeed = 0.04;
-const legsMinRotation = 0, legsMaxRotation = Math.PI/2, legsRotationSpeed = 0.02;
-const headMinRotation = -Math.PI, headMaxRotation = 0, headRotationSpeed = 0.04;
+const ARMS_MIN_SHIFT = 0, ARMS_MAX_SHIFT = 2, ARMS_SHIFT_SPEED = 0.04;
+const FEET_MIN_ROTATION = 0, FEET_MAX_ROTATION = Math.PI, FEET_ROTATION_SPEED = 0.04;
+const LEGS_MIN_ROTATION = 0, LEGS_MAX_ROTATION = Math.PI/2, LEGS_ROTATION_SPEED = 0.02;
+const HEAD_MIN_ROTATION = -Math.PI, HEAD_MAX_ROTATION = 0, HEAD_ROTATION_SPEED = 0.04;
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
@@ -495,10 +495,10 @@ function checkTruckMode() {
     'use strict';
 
     var THRESHOLD = 0.05;
-    return Math.abs(headRotation - headMinRotation) < THRESHOLD &&
-           Math.abs(feetRotation - feetMaxRotation) < THRESHOLD &&
-           Math.abs(legsRotation - legsMaxRotation) < THRESHOLD &&
-           Math.abs(armsShift - armsMinShift) < THRESHOLD;
+    return Math.abs(headRotation - HEAD_MIN_ROTATION) < THRESHOLD &&
+           Math.abs(feetRotation - FEET_MAX_ROTATION) < THRESHOLD &&
+           Math.abs(legsRotation - LEGS_MAX_ROTATION) < THRESHOLD &&
+           Math.abs(armsRhift - ARMS_MIN_SHIFT) < THRESHOLD;
 }
 
 function checkTrailerPositioned() {
@@ -603,53 +603,53 @@ function onKeyDown(e) {
     function onDownKeyDown() { trailer.position.z -= 0.1; }
 
     function onQKeyDown() { 
-        if (feetRotation < feetMaxRotation) {
-            feetRotation += feetRotationSpeed;
-            feet.rotateX(feetRotationSpeed); 
+        if (feetRotation < FEET_MAX_ROTATION) {
+            feetRotation += FEET_ROTATION_SPEED;
+            feet.rotateX(FEET_ROTATION_SPEED); 
         }
     }
     function onAKeyDown() { 
-        if (feetRotation > feetMinRotation) {
-            feetRotation -= feetRotationSpeed;
-            feet.rotateX(-feetRotationSpeed);
+        if (feetRotation > FEET_MIN_ROTATION) {
+            feetRotation -= FEET_ROTATION_SPEED;
+            feet.rotateX(-FEET_ROTATION_SPEED);
         }
     }
     function onWKeyDown() { 
-        if (legsRotation < legsMaxRotation) {
-            legsRotation += legsRotationSpeed;
-            inferiorBody.rotateX(legsRotationSpeed); 
+        if (legsRotation < LEGS_MAX_ROTATION) {
+            legsRotation += LEGS_ROTATION_SPEED;
+            inferiorBody.rotateX(LEGS_ROTATION_SPEED); 
         }
     }
     function onSKeyDown() { 
-        if (legsRotation > legsMinRotation) {
-            legsRotation -= legsRotationSpeed;
-            inferiorBody.rotateX(-legsRotationSpeed);
+        if (legsRotation > LEGS_MIN_ROTATION) {
+            legsRotation -= LEGS_ROTATION_SPEED;
+            inferiorBody.rotateX(-LEGS_ROTATION_SPEED);
         }
     }
     function onEKeyDown() { 
-        if (armsShift < armsMaxShift) {
-            armsShift += armsShiftSpeed;
-            leftArm.position.x += armsShiftSpeed;
-            rightArm.position.x -= armsShiftSpeed;
+        if (armsShift < ARMS_MAX_SHIFT) {
+            armsShift += ARMS_SHIFT_SPEED;
+            leftArm.position.x += ARMS_SHIFT_SPEED;
+            rightArm.position.x -= ARMS_SHIFT_SPEED;
         }
     }
     function onDKeyDown() {
-        if (armsShift > armsMinShift) {
-            armsShift -= armsShiftSpeed;
-            leftArm.position.x -= armsShiftSpeed;
-            rightArm.position.x += armsShiftSpeed;
+        if (armsShift > ARMS_MIN_SHIFT) {
+            armsShift -= ARMS_SHIFT_SPEED;
+            leftArm.position.x -= ARMS_SHIFT_SPEED;
+            rightArm.position.x += ARMS_SHIFT_SPEED;
         }
     }
     function onRKeyDown() { 
-        if (headRotation < headMaxRotation) {
-            headRotation += headRotationSpeed;
-            head.rotateX(headRotationSpeed); 
+        if (headRotation < HEAD_MAX_ROTATION) {
+            headRotation += HEAD_ROTATION_SPEED;
+            head.rotateX(HEAD_ROTATION_SPEED); 
         }
     }
     function onFKeyDown() { 
-        if (headRotation > headMinRotation) {
-            headRotation -= headRotationSpeed;
-            head.rotateX(-headRotationSpeed);
+        if (headRotation > HEAD_MIN_ROTATION) {
+            headRotation -= HEAD_ROTATION_SPEED;
+            head.rotateX(-HEAD_ROTATION_SPEED);
         }
     }
 
