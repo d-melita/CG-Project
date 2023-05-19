@@ -11,7 +11,8 @@
 
 var camera, scene, renderer;
 
-var trailer, transformer, inferiorBody, leftArm, rightArm, head, feet;
+var trailer, trailerHitch;
+var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
 var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
 var armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.04;
@@ -35,6 +36,11 @@ const ESCAPE_RADIUS = 0.5, ESCAPE_HEIGHT = 4, ESCAPE_OFFSET = 2;
 const X_HEAD = 2, Y_HEAD = 2, Z_HEAD = 2;
 const EYE_RADIUS = 0.25;
 const X_ANTENNA = 0.5, Y_ANTENNA = 0.5, Z_ANTENNA = 0.5;
+
+const X_TRAILER_TOP = 8, Y_TRAILER_TOP = 5, Z_TRAILER_TOP = 24;
+const X_TRAILER_HITCH = 2, Y_TRAILER_HITCH = 1, Z_TRAILER_HITCH = 1;
+const X_TRAILER_BOTTOM = 6, Y_TRAILER_BOTTOM = 3, Z_TRAILER_BOTTOM = 10;
+const TRAILER_BACK_WHEEL_POSITION = -17.5, TRAILER_MIDDLE_WHEEL_POSITION = -21.5;
 
 var keys = {};
 
@@ -223,8 +229,12 @@ function addLeg(obj, left) {
     if (left) x_mult = 1; else x_mult = -1;
 
     addBox(leg, 0, 0, 0, X_LEG, Y_LEG, Z_LEG, BLUE);
-    addWheel(leg, x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), BACK_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2);
-    addWheel(leg, x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), MIDDLE_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2);
+    addWheel(leg, 
+        x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), BACK_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2
+    );
+    addWheel(leg, 
+        x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), MIDDLE_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2
+    );
 
     leg.position.set(x_mult * X_LEG/2, 0, 0);
 
@@ -283,8 +293,14 @@ function addAntennas(obj) {
 
     var antennas = new THREE.Object3D();
 
-    addBox(antennas, X_HEAD/2 - X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
-    addBox(antennas, - X_HEAD/2 + X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, X_ANTENNA, Y_ANTENNA, Z_ANTENNA, BLUE);
+    addBox(antennas, 
+        X_HEAD/2 - X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, 
+        X_ANTENNA, Y_ANTENNA, Z_ANTENNA, 
+    BLUE);
+    addBox(antennas, 
+        - X_HEAD/2 + X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, 
+        X_ANTENNA, Y_ANTENNA, Z_ANTENNA, 
+    BLUE);
 
     antennas.position.set(0, Y_HEAD/2 + Y_ANTENNA/2, 0);
     obj.add(antennas);
@@ -321,8 +337,14 @@ function addArm(obj, left) {
     var x_mult; if(left) x_mult = 1; else x_mult = -1;
 
     addBox(arm, 0, 0, 0, X_ARM, Y_ARM, Z_ARM, RED);
-    addBox(arm, x_mult * (X_ARM/2 - X_FOREARM/2), -Y_ARM/2 - Y_FOREARM/2, - Z_ARM/2 + Z_FOREARM/2, X_FOREARM, Y_FOREARM, Z_FOREARM, RED)
-    addCylinder(arm, 0, ESCAPE_OFFSET, - Z_ARM/2 - ESCAPE_RADIUS, ESCAPE_RADIUS, ESCAPE_HEIGHT, '', 0, GREY);
+    addBox(arm, 
+        x_mult * (X_ARM/2 - X_FOREARM/2), -Y_ARM/2 - Y_FOREARM/2, - Z_ARM/2 + Z_FOREARM/2, 
+        X_FOREARM, Y_FOREARM, Z_FOREARM, 
+    RED)
+    addCylinder(arm, 
+        0, ESCAPE_OFFSET, - Z_ARM/2 - ESCAPE_RADIUS, 
+        ESCAPE_RADIUS, ESCAPE_HEIGHT, 
+    '', 0, GREY);
 
     arm.position.set(x_mult * (X_CHEST/2 - X_ARM/2), 0, - Z_CHEST/2 - Z_ARM/2);
     obj.add(arm);
@@ -358,7 +380,10 @@ function addAbdomen(obj) {
 
     var abdomen = new THREE.Object3D();
 
-    addBox(abdomen, 0, Y_ABDOMEN/2, Z_ABDOMEN/2, X_ABDOMEN, Y_ABDOMEN, Z_ABDOMEN, RED);
+    addBox(abdomen, 
+        0, Y_ABDOMEN/2, Z_ABDOMEN/2, 
+        X_ABDOMEN, Y_ABDOMEN, Z_ABDOMEN, 
+    RED);
 
     obj.add(abdomen);
 }
@@ -369,8 +394,12 @@ function addWaist(obj) {
     var waist = new THREE.Object3D();
 
     addBox(waist, 0, 0, 0, X_WAIST, Y_WAIST, Z_WAIST, GREY);
-    addWheel(waist, X_WAIST/2 - WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS);
-    addWheel(waist, - X_WAIST/2 + WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS);
+    addWheel(waist, 
+        X_WAIST/2 - WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS
+    );
+    addWheel(waist, 
+        - X_WAIST/2 + WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS
+    );
 
     waist.position.set(0, - Y_WAIST/2, Z_CHEST - Z_WAIST/2);
     obj.add(waist);
@@ -401,26 +430,52 @@ function addTransformer(x, y, z) {
     scene.add(transformer);
 }
 
+function addTrailerHitch(obj) {
+    'use strict';
+
+    trailerHitch = new THREE.Object3D();
+
+    addBox(trailerHitch, 0, 3.5, -0.5, 2, 1, 1, BLACK);
+    // set trailerHitch.min as the position of the trailerHitch
+    trailerHitch.min = new THREE.Vector3(
+        trailerHitch.position.x - X_TRAILER_HITCH/2,
+        trailerHitch.position.y - Y_TRAILER_HITCH/2,
+        trailerHitch.position.z - Z_TRAILER_HITCH/2
+    );
+
+    obj.add(trailerHitch);
+}
+
 function addTrailer(x, y, z) {
     'use strict';
 
     trailer = new THREE.Object3D();
 
-    addBox(trailer, 0, 6.5, -12, 8, 5, 24, WHITE); // trailer top
-    addBox(trailer, 0, 2.5, -19, 6, 3, 10, GREY); // trailer base
+    addBox(trailer, 
+        0, 1 + Y_TRAILER_BOTTOM + Y_TRAILER_TOP/2, -Z_TRAILER_TOP/2, 
+        X_TRAILER_TOP, Y_TRAILER_TOP, Z_TRAILER_TOP, 
+    WHITE);
+    addBox(trailer, 
+        0, 1 + Y_TRAILER_BOTTOM/2, - Z_TRAILER_TOP + Z_TRAILER_BOTTOM/2, 
+        X_TRAILER_BOTTOM, Y_TRAILER_BOTTOM, Z_TRAILER_BOTTOM, 
+    GREY);
+    addTrailerHitch(trailer);
 
-    addWheel(trailer, -3.5, 1.5, -17.5);
-    addWheel(trailer, 3.5, 1.5, -17.5);
-    addWheel(trailer, -3.5, 1.5, -21.5);
-    addWheel(trailer, 3.5, 1.5, -21.5);
+    addWheel(trailer, 
+        - X_TRAILER_BOTTOM/2 - WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_MIDDLE_WHEEL_POSITION
+    );
+    addWheel(trailer, 
+        X_TRAILER_BOTTOM/2 + WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_MIDDLE_WHEEL_POSITION
+    );
+    addWheel(trailer, 
+        - X_TRAILER_BOTTOM/2 - WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_BACK_WHEEL_POSITION
+    );
+    addWheel(trailer, 
+        X_TRAILER_BOTTOM/2 + WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_BACK_WHEEL_POSITION
+    );
 
-    addBox(trailer, 0, 3.5, -0.5, 2, 1, 1, BLACK); // trailer hitch
-
+    trailer.position.set(x, y, z);
     scene.add(trailer);
-
-    trailer.position.x = x;
-    trailer.position.y = y;
-    trailer.position.z = z;
 }
 
 //////////////////////
