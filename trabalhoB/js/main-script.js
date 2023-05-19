@@ -12,13 +12,13 @@
 var camera, scene, renderer;
 
 var trailer, trailerHitch;
-var transformer, inferiorBody, leftArm, rightArm, head, feet;
+var transformer, inferiorBody, leftArm, rightArm, head, legsAndFeet, feet;
 
 var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
-var armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.04;
-var feetMinRotation = 0, feetMaxRotation = Math.PI, feetRotationSpeed = 0.04;
-var legsMinRotation = 0, legsMaxRotation = Math.PI/2, legsRotationSpeed = 0.02;
-var headMinRotation = -Math.PI, headMaxRotation = 0, headRotationSpeed = 0.04;
+const armsMinShift = 0, armsMaxShift = 2, armsShiftSpeed = 0.04;
+const feetMinRotation = 0, feetMaxRotation = Math.PI, feetRotationSpeed = 0.04;
+const legsMinRotation = 0, legsMaxRotation = Math.PI/2, legsRotationSpeed = 0.02;
+const headMinRotation = -Math.PI, headMaxRotation = 0, headRotationSpeed = 0.04;
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
@@ -41,6 +41,10 @@ const X_TRAILER_TOP = 8, Y_TRAILER_TOP = 5, Z_TRAILER_TOP = 24;
 const X_TRAILER_HITCH = 2, Y_TRAILER_HITCH = 1, Z_TRAILER_HITCH = 1;
 const X_TRAILER_BOTTOM = 6, Y_TRAILER_BOTTOM = 3, Z_TRAILER_BOTTOM = 10;
 const TRAILER_BACK_WHEEL_POSITION = -17.5, TRAILER_MIDDLE_WHEEL_POSITION = -21.5;
+
+var trailerState = 'detached';
+const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, - Y_TIGHT - Z_TRAILER_HITCH);
+const TRAILER_CONNECTION_SPEED = 0.1;
 
 var keys = {};
 
@@ -72,6 +76,9 @@ function init() {
 function update(){
     'use strict';
 
+    handleCollisions();
+    if (trailerState == 'attaching') return;
+
     for (const [key, val] of Object.entries(keys)) {
         val.call();
     }
@@ -98,7 +105,6 @@ function animate() {
     render();
 
     requestAnimationFrame(animate);
-
 }
 
 /////////////////////
@@ -255,10 +261,14 @@ function addLegs(obj) {
 function addLegsAndFeet(obj) {
     'use strict';
 
-    var legsAndFeet = new THREE.Object3D();
+    legsAndFeet = new THREE.Object3D();
 
     addLegs(legsAndFeet);
     addFeet(legsAndFeet);
+
+    // Vectors for AABB Box
+    legsAndFeet.min = new THREE.Vector3();
+    legsAndFeet.max = new THREE.Vector3();
 
     legsAndFeet.position.set(0, - Y_TIGHT - Y_LEG/2, Z_LEG/2);
     obj.add(legsAndFeet);
@@ -435,14 +445,13 @@ function addTrailerHitch(obj) {
 
     trailerHitch = new THREE.Object3D();
 
-    addBox(trailerHitch, 0, 3.5, -0.5, 2, 1, 1, BLACK);
-    // set trailerHitch.min as the position of the trailerHitch
-    trailerHitch.min = new THREE.Vector3(
-        trailerHitch.position.x - X_TRAILER_HITCH/2,
-        trailerHitch.position.y - Y_TRAILER_HITCH/2,
-        trailerHitch.position.z - Z_TRAILER_HITCH/2
-    );
+    addBox(trailerHitch, 0, 0, 0, X_TRAILER_HITCH, Y_TRAILER_HITCH, Z_TRAILER_HITCH, BLACK);
 
+    // Vectors for AABB Box
+    trailerHitch.min = new THREE.Vector3();
+    trailerHitch.max = new THREE.Vector3();
+
+    trailerHitch.position.set( 0, 1 + Y_TRAILER_BOTTOM - Y_TRAILER_HITCH/2, -Z_TRAILER_HITCH/2);
     obj.add(trailerHitch);
 }
 
@@ -482,18 +491,88 @@ function addTrailer(x, y, z) {
 /* CHECK COLLISIONS */
 //////////////////////
 
-function checkCollisions(){
+function checkTruckMode() {
     'use strict';
 
+    var THRESHOLD = 0.05;
+    return Math.abs(headRotation - headMinRotation) < THRESHOLD &&
+           Math.abs(feetRotation - feetMaxRotation) < THRESHOLD &&
+           Math.abs(legsRotation - legsMaxRotation) < THRESHOLD &&
+           Math.abs(armsShift - armsMinShift) < THRESHOLD;
+}
+
+function checkTrailerPositioned() {
+    'use strict';
+
+    var THRESHOLD = TRAILER_CONNECTION_SPEED;
+    var trailerHitchPosition = new THREE.Vector3();
+    trailerHitch.getWorldPosition(trailerHitchPosition);
+    return trailerHitchPosition.distanceTo(TRAILER_CONNECTION) <= THRESHOLD;
+}
+
+function checkCollision(obj1, obj2){
+    'use strict';
+
+    return obj1.max.x >= obj2.min.x && obj1.min.x <= obj2.max.x &&
+        obj1.max.y >= obj2.min.y && obj1.min.y <= obj2.max.y &&
+        obj1.max.z >= obj2.min.z && obj1.min.z <= obj2.max.z;
 }
 
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
 
+function moveTrailerToConnection() {
+    'use strict';
+
+    var movementVector = new THREE.Vector3();
+    trailerHitch.getWorldPosition(movementVector);
+    movementVector.multiplyScalar(-1);
+    movementVector.add(TRAILER_CONNECTION);
+
+    trailer.position.add(movementVector.multiplyScalar(TRAILER_CONNECTION_SPEED));
+}
+
+function updateAABBBox(obj, x_min, y_min, z_min, x_max, y_max, z_max) {
+    'use strict';
+
+    obj.getWorldPosition(obj.min);
+    obj.min.add(new THREE.Vector3(x_min, y_min, z_min));
+
+    obj.getWorldPosition(obj.max);
+    obj.max.add(new THREE.Vector3(x_max, y_max, z_max));
+}
+
+function updateAABBBoxes() {
+    'use strict';
+
+    updateAABBBox(trailerHitch, 
+        -X_TRAILER_HITCH/2, -Y_TRAILER_HITCH/2, -Z_TRAILER_HITCH/2, 
+        X_TRAILER_HITCH/2, Y_TRAILER_HITCH/2, Z_TRAILER_HITCH/2
+    );
+
+    updateAABBBox(legsAndFeet, 
+        - X_LEG, - Z_LEG/2, - Y_LEG/2 - Y_FOOT, 
+        X_LEG, Z_LEG/2, Y_LEG/2
+    );
+}
+
 function handleCollisions(){
     'use strict';
 
+    if (!checkTruckMode()) return;
+
+    updateAABBBoxes();
+
+    if (trailerState == 'detached' && checkCollision(trailerHitch, legsAndFeet)) {
+        trailerState = 'attaching';
+    } else if (trailerState == 'attaching' && checkTrailerPositioned()) {
+        trailerState = 'attached';
+    } else if (trailerState == 'attached' && !checkCollision(trailerHitch, legsAndFeet)) {
+        trailerState = 'detached';
+    } else if (trailerState == 'attaching') {
+        moveTrailerToConnection();
+    }
 }
 
 ////////////////////////////
