@@ -20,7 +20,7 @@ const FEET_MIN_ROTATION = 0, FEET_MAX_ROTATION = Math.PI, FEET_ROTATION_SPEED = 
 const LEGS_MIN_ROTATION = 0, LEGS_MAX_ROTATION = Math.PI/2, LEGS_ROTATION_SPEED = 0.02;
 const HEAD_MIN_ROTATION = -Math.PI, HEAD_MAX_ROTATION = 0, HEAD_ROTATION_SPEED = 0.04;
 
-const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
+const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
 const WHEEL_RADIUS = 1.5, WHEEL_HEIGHT = 1;
 const X_TIGHT = 1, Y_TIGHT = 3, Z_TIGHT = 1;
@@ -332,7 +332,7 @@ function addHead(obj) {
 
     head = new THREE.Object3D();
 
-    addBox(head, 0, Y_HEAD/2, Z_HEAD/2, X_HEAD, Y_HEAD, Z_HEAD, RED);
+    addBox(head, 0, Y_HEAD/2, Z_HEAD/2, X_HEAD, Y_HEAD, Z_HEAD, DARK_RED);
     addAntennas(head);
     addEyes(head);
 
@@ -346,11 +346,11 @@ function addArm(obj, left) {
     var arm = new THREE.Object3D();
     var x_mult; if(left) x_mult = 1; else x_mult = -1;
 
-    addBox(arm, 0, 0, 0, X_ARM, Y_ARM, Z_ARM, RED);
+    addBox(arm, 0, 0, 0, X_ARM, Y_ARM, Z_ARM, DARK_RED);
     addBox(arm, 
         x_mult * (X_ARM/2 - X_FOREARM/2), -Y_ARM/2 - Y_FOREARM/2, - Z_ARM/2 + Z_FOREARM/2, 
         X_FOREARM, Y_FOREARM, Z_FOREARM, 
-    RED)
+    DARK_RED)
     addCylinder(arm, 
         0, ESCAPE_OFFSET, - Z_ARM/2 - ESCAPE_RADIUS, 
         ESCAPE_RADIUS, ESCAPE_HEIGHT, 
