@@ -14,6 +14,8 @@ var camera, scene, renderer;
 var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, legsAndFeet, feet;
 
+const frustumSize = 50;
+
 var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
 const ARMS_MIN_SHIFT = 0, ARMS_MAX_SHIFT = 2, ARMS_SHIFT_SPEED = 0.04;
 const FEET_MIN_ROTATION = 0, FEET_MAX_ROTATION = Math.PI, FEET_ROTATION_SPEED = 0.04;
@@ -127,7 +129,8 @@ function createScene() {
 //////////////////////
 
 function getOrthographicCamera(pos_x, pos_y, pos_z) {
-  const camera = new THREE.OrthographicCamera(-30, 30, 30, -30, 1, 100);
+  const aspect = window.innerWidth / window.innerHeight;
+  const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
   camera.position.set(pos_x, pos_y, pos_z);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   return camera
