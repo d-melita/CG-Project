@@ -12,7 +12,7 @@
 var camera, scene, renderer;
 
 var trailer, trailerHitch;
-var transformer, inferiorBody, leftArm, rightArm, head, legsAndFeet, feet;
+var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
 const frustumSize = 50;
 
@@ -24,6 +24,7 @@ const HEAD_MIN_ROTATION = -Math.PI, HEAD_MAX_ROTATION = 0, HEAD_ROTATION_SPEED =
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
+const Z_TRANSFORMER_POSITION = 10;
 const WHEEL_RADIUS = 1.5, WHEEL_HEIGHT = 1;
 const X_TIGHT = 1, Y_TIGHT = 3, Z_TIGHT = 1;
 const X_LEG = 3, Y_LEG = 10, Z_LEG = 2;
@@ -39,6 +40,7 @@ const X_HEAD = 2, Y_HEAD = 2, Z_HEAD = 2;
 const EYE_RADIUS = 0.25;
 const X_ANTENNA = 0.5, Y_ANTENNA = 0.5, Z_ANTENNA = 0.5;
 
+const Z_TRAILER_INITIAL_POSITION = -10;
 const X_TRAILER_TOP = 8, Y_TRAILER_TOP = 5, Z_TRAILER_TOP = 24;
 const X_TRAILER_HITCH = 2, Y_TRAILER_HITCH = 1, Z_TRAILER_HITCH = 1;
 const X_TRAILER_BOTTOM = 6, Y_TRAILER_BOTTOM = 3, Z_TRAILER_BOTTOM = 10;
@@ -46,7 +48,7 @@ const TRAILER_BACK_WHEEL_POSITION = -17.5, TRAILER_MIDDLE_WHEEL_POSITION = -21.5
 var movementVector = new THREE.Vector3(0, 0, 0);
 
 var trailerState = 'detached';
-const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, - Y_TIGHT - Z_TRAILER_HITCH);
+const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, Z_TRANSFORMER_POSITION - Y_TIGHT - Z_TRAILER_HITCH);
 const TRAILER_CONNECTION_SPEED = 0.1;
 
 var keys = {};
@@ -123,8 +125,8 @@ function createScene() {
     scene.add(new THREE.AxesHelper(20));
     scene.background = new THREE.Color(BACKGROUND_COLOR);
 
-    addTrailer(0, 0, -10);
-    addTransformer(0, -Y_LEG, 0);
+    addTrailer(0, 0, Z_TRAILER_INITIAL_POSITION);
+    addTransformer(0, -Y_LEG, Z_TRANSFORMER_POSITION);
 }
 
 //////////////////////
@@ -267,14 +269,10 @@ function addLegs(obj) {
 function addLegsAndFeet(obj) {
     'use strict';
 
-    legsAndFeet = new THREE.Object3D();
+    var legsAndFeet = new THREE.Object3D();
 
     addLegs(legsAndFeet);
     addFeet(legsAndFeet);
-
-    // Vectors for AABB Box
-    legsAndFeet.min = new THREE.Vector3();
-    legsAndFeet.max = new THREE.Vector3();
 
     legsAndFeet.position.set(0, - Y_TIGHT - Y_LEG/2, Z_LEG/2);
     obj.add(legsAndFeet);
@@ -442,6 +440,10 @@ function addTransformer(x, y, z) {
     addInferiorBody(transformer);
     addSuperiorBody(transformer);
 
+    // Vectors for AABB Box
+    transformer.min = new THREE.Vector3();
+    transformer.max = new THREE.Vector3();
+
     transformer.position.set(x, y, z);
     scene.add(transformer);
 }
@@ -557,10 +559,15 @@ function updateAABBBoxes() {
         X_TRAILER_TOP/2, 1 + Y_TRAILER_BOTTOM + Y_TRAILER_TOP, 0
     );
 
-    updateAABBBox(legsAndFeet, 
-        - X_LEG, - Z_LEG/2, - Y_LEG/2 - Y_FOOT, 
-        X_LEG, Z_LEG/2, Y_LEG/2
+    updateAABBBox(transformer, 
+        - X_CHEST/2, Y_LEG, - Y_TIGHT - Y_LEG - Y_FOOT, 
+        X_CHEST/2, Y_LEG + 2*WHEEL_RADIUS + Y_FOREARM + Y_CHEST, 2*WHEEL_RADIUS + Z_WAIST
     );
+    var vec = new THREE.Vector3();
+    transformer.getWorldPosition(vec);
+    console.log(vec);
+    console.log(transformer.min);
+    console.log(transformer.max);
 }
 
 function handleCollisions(){
@@ -570,11 +577,11 @@ function handleCollisions(){
 
     updateAABBBoxes();
 
-    if (trailerState == 'detached' && checkCollision(trailer, legsAndFeet)) {
+    if (trailerState == 'detached' && checkCollision(trailer, transformer)) {
         trailerState = 'attaching';
     } else if (trailerState == 'attaching' && checkTrailerPositioned()) {
         trailerState = 'attached';
-    } else if (trailerState == 'attached' && !checkCollision(trailer, legsAndFeet)) {
+    } else if (trailerState == 'attached' && !checkCollision(trailer, transformer)) {
         trailerState = 'detached';
     } else if (trailerState == 'attaching') {
         moveTrailerToConnection();
