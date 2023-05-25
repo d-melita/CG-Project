@@ -450,10 +450,6 @@ function addTrailerHitch(obj) {
 
     addBox(trailerHitch, 0, 0, 0, X_TRAILER_HITCH, Y_TRAILER_HITCH, Z_TRAILER_HITCH, BLACK);
 
-    // Vectors for AABB Box
-    trailerHitch.min = new THREE.Vector3();
-    trailerHitch.max = new THREE.Vector3();
-
     trailerHitch.position.set( 0, 1 + Y_TRAILER_BOTTOM - Y_TRAILER_HITCH/2, -Z_TRAILER_HITCH/2);
     obj.add(trailerHitch);
 }
@@ -486,6 +482,10 @@ function addTrailer(x, y, z) {
         X_TRAILER_BOTTOM/2 + WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_BACK_WHEEL_POSITION
     );
 
+    // Vectors for AABB Box
+    trailer.min = new THREE.Vector3();
+    trailer.max = new THREE.Vector3();
+
     trailer.position.set(x, y, z);
     scene.add(trailer);
 }
@@ -507,7 +507,7 @@ function checkTruckMode() {
 function checkTrailerPositioned() {
     'use strict';
 
-    var THRESHOLD = TRAILER_CONNECTION_SPEED;
+    var THRESHOLD = TRAILER_CONNECTION_SPEED/2;
     var trailerHitchPosition = new THREE.Vector3();
     trailerHitch.getWorldPosition(trailerHitchPosition);
     return trailerHitchPosition.distanceTo(TRAILER_CONNECTION) <= THRESHOLD;
@@ -549,9 +549,9 @@ function updateAABBBox(obj, x_min, y_min, z_min, x_max, y_max, z_max) {
 function updateAABBBoxes() {
     'use strict';
 
-    updateAABBBox(trailerHitch, 
-        -X_TRAILER_HITCH/2, -Y_TRAILER_HITCH/2, -Z_TRAILER_HITCH/2, 
-        X_TRAILER_HITCH/2, Y_TRAILER_HITCH/2, Z_TRAILER_HITCH/2
+    updateAABBBox(trailer, 
+        -X_TRAILER_TOP/2, 0, -Z_TRAILER_TOP,
+        X_TRAILER_TOP/2, 1 + Y_TRAILER_BOTTOM + Y_TRAILER_TOP, 0
     );
 
     updateAABBBox(legsAndFeet, 
@@ -567,11 +567,11 @@ function handleCollisions(){
 
     updateAABBBoxes();
 
-    if (trailerState == 'detached' && checkCollision(trailerHitch, legsAndFeet)) {
+    if (trailerState == 'detached' && checkCollision(trailer, legsAndFeet)) {
         trailerState = 'attaching';
     } else if (trailerState == 'attaching' && checkTrailerPositioned()) {
         trailerState = 'attached';
-    } else if (trailerState == 'attached' && !checkCollision(trailerHitch, legsAndFeet)) {
+    } else if (trailerState == 'attached' && !checkCollision(trailer, legsAndFeet)) {
         trailerState = 'detached';
     } else if (trailerState == 'attaching') {
         moveTrailerToConnection();
@@ -671,13 +671,6 @@ function onKeyDown(e) {
     function on5KeyDown() {
         switchCamera(getPerspectiveCamera());
     }
-    function on6KeyDown() {
-        scene.traverse(function (node) {
-            if (node instanceof THREE.Mesh) {
-                node.material.wireframe = !node.material.wireframe;
-            }
-        });
-    }
 
     switch (e.keyCode) {
 
@@ -698,7 +691,11 @@ function onKeyDown(e) {
             keys[53] = on5KeyDown;
             break;
         case 54: // 6
-            keys[54] = on6KeyDown;
+            scene.traverse(function (node) {
+                if (node instanceof THREE.Mesh) {
+                    node.material.wireframe = !node.material.wireframe;
+                }
+            });
             break;
 
         // case arrow keys: move trailer
