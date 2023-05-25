@@ -16,7 +16,7 @@ var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
 const frustumSize = 50;
 
-var armsShift = 0, feetRotation = 0, legsRotation = 0, headRotation = 0;
+var armsShift = 2, feetRotation = 0, legsRotation = 0, headRotation = 0;
 const ARMS_MIN_SHIFT = 0, ARMS_MAX_SHIFT = 2, ARMS_SHIFT_SPEED = 0.04;
 const FEET_MIN_ROTATION = 0, FEET_MAX_ROTATION = Math.PI, FEET_ROTATION_SPEED = 0.04;
 const LEGS_MIN_ROTATION = 0, LEGS_MAX_ROTATION = Math.PI/2, LEGS_ROTATION_SPEED = 0.02;
@@ -362,7 +362,7 @@ function addArm(obj, left) {
         ESCAPE_RADIUS, ESCAPE_HEIGHT, 
     '', 0, GREY);
 
-    arm.position.set(x_mult * (X_CHEST/2 - X_ARM/2), 0, - Z_CHEST/2 - Z_ARM/2);
+    arm.position.set(x_mult * (armsShift + X_CHEST/2 - X_ARM/2), 0, - Z_CHEST/2 - Z_ARM/2);
     obj.add(arm);
 
     return arm;
