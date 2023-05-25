@@ -45,7 +45,9 @@ const X_TRAILER_TOP = 8, Y_TRAILER_TOP = 5, Z_TRAILER_TOP = 24;
 const X_TRAILER_HITCH = 2, Y_TRAILER_HITCH = 1, Z_TRAILER_HITCH = 1;
 const X_TRAILER_BOTTOM = 6, Y_TRAILER_BOTTOM = 3, Z_TRAILER_BOTTOM = 10;
 const TRAILER_BACK_WHEEL_POSITION = -17.5, TRAILER_MIDDLE_WHEEL_POSITION = -21.5;
+
 var movementVector = new THREE.Vector3(0, 0, 0);
+const MOVEMENT_SPEED = 0.2;
 
 var trailerState = 'detached';
 const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, Z_TRANSFORMER_POSITION - Y_TIGHT - Z_TRAILER_HITCH);
@@ -610,10 +612,10 @@ function onResize() {
 function onKeyDown(e) {
     'use strict';
 
-    function onLeftKeyDown() { movementVector.x -= 0.1; }
-    function onRightKeyDown() { movementVector.x += 0.1; }
-    function onUpKeyDown() { movementVector.z += 0.1; }
-    function onDownKeyDown() { movementVector.z -= 0.1; }
+    function onLeftKeyDown() { movementVector.x -= MOVEMENT_SPEED; }
+    function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED; }
+    function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED; }
+    function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED; }
 
     function onQKeyDown() { 
         if (feetRotation < FEET_MAX_ROTATION) {
