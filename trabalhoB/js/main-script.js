@@ -327,8 +327,8 @@ function addEyes(obj) {
 
     var eyes = new THREE.Object3D();
 
-    addCylinder(eyes, X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
-    addCylinder(eyes, -X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0.01, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, -X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0.01, 'x', Math.PI/2, BLUE);
 
     obj.add(eyes);
 }
