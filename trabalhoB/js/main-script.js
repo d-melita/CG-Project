@@ -43,6 +43,7 @@ const X_TRAILER_TOP = 8, Y_TRAILER_TOP = 5, Z_TRAILER_TOP = 24;
 const X_TRAILER_HITCH = 2, Y_TRAILER_HITCH = 1, Z_TRAILER_HITCH = 1;
 const X_TRAILER_BOTTOM = 6, Y_TRAILER_BOTTOM = 3, Z_TRAILER_BOTTOM = 10;
 const TRAILER_BACK_WHEEL_POSITION = -17.5, TRAILER_MIDDLE_WHEEL_POSITION = -21.5;
+var movementVector = new THREE.Vector3(0, 0, 0);
 
 var trailerState = 'detached';
 const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, - Y_TIGHT - Z_TRAILER_HITCH);
@@ -78,12 +79,14 @@ function init() {
 function update(){
     'use strict';
 
+    movementVector.set(0, 0, 0);
     handleCollisions();
     if (trailerState == 'attaching') return;
 
     for (const [key, val] of Object.entries(keys)) {
         val.call();
     }
+    trailer.position.add(movementVector);
 }
 
 /////////////
@@ -528,12 +531,12 @@ function checkCollision(obj1, obj2){
 function moveTrailerToConnection() {
     'use strict';
 
-    var movementVector = new THREE.Vector3();
     trailerHitch.getWorldPosition(movementVector);
     movementVector.multiplyScalar(-1);
     movementVector.add(TRAILER_CONNECTION);
+    movementVector.multiplyScalar(TRAILER_CONNECTION_SPEED)
 
-    trailer.position.add(movementVector.multiplyScalar(TRAILER_CONNECTION_SPEED));
+    trailer.position.add(movementVector);
 }
 
 function updateAABBBox(obj, x_min, y_min, z_min, x_max, y_max, z_max) {
@@ -600,10 +603,10 @@ function onResize() {
 function onKeyDown(e) {
     'use strict';
 
-    function onLeftKeyDown() { trailer.position.x -= 0.1; }
-    function onRightKeyDown() { trailer.position.x += 0.1; }
-    function onUpKeyDown() { trailer.position.z += 0.1; }
-    function onDownKeyDown() { trailer.position.z -= 0.1; }
+    function onLeftKeyDown() { movementVector.x -= 0.1; }
+    function onRightKeyDown() { movementVector.x += 0.1; }
+    function onUpKeyDown() { movementVector.z += 0.1; }
+    function onDownKeyDown() { movementVector.z -= 0.1; }
 
     function onQKeyDown() { 
         if (feetRotation < FEET_MAX_ROTATION) {
