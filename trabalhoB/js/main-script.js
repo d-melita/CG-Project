@@ -57,7 +57,7 @@ var trailerState = 'detached';
 const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, Z_TRANSFORMER_POSITION - Y_TIGHT - Z_TRAILER_HITCH);
 const TRAILER_CONNECTION_SPEED = 0.1;
 
-var keys = {};
+var conversion_keys = {}, non_conversion_keys = {};
 var clock = new THREE.Clock();
 var elapsedTime;
 
@@ -161,19 +161,22 @@ function on6KeyDown() { // 6 key
     for (var i = 0; i < materials.length; i++) {
         materials[i].wireframe = !materials[i].wireframe;
     }
-    delete keys[54];
+    delete non_conversion_keys[54];
 }
 
 function update(){
     'use strict';
 
     movementVector.set(0, 0, 0);
+
+    for (const [key, val] of Object.entries(non_conversion_keys))
+        val.call();
+
     handleCollisions();
     if (trailerState == 'attaching') return;
 
-    for (const [key, val] of Object.entries(keys)) {
+    for (const [key, val] of Object.entries(conversion_keys))
         val.call();
-    }
     trailer.position.add(movementVector);
 }
 
@@ -699,62 +702,62 @@ function onKeyDown(e) {
 
         // switch cameras
         case 49: // 1
-            keys[49] = on1KeyDown;
+            non_conversion_keys[49] = on1KeyDown;
             break;
         case 50: // 2
-            keys[50] = on2KeyDown;
+            non_conversion_keys[50] = on2KeyDown;
             break;
         case 51: // 3
-            keys[51] = on3KeyDown;
+            non_conversion_keys[51] = on3KeyDown;
             break;
         case 52: // 4
-            keys[52] = on4KeyDown;
+            non_conversion_keys[52] = on4KeyDown;
             break;
         case 53: // 5
-            keys[53] = on5KeyDown;
+            non_conversion_keys[53] = on5KeyDown;
             break;
         case 54: // 6
-            keys[54] = on6KeyDown;
+            non_conversion_keys[54] = on6KeyDown;
             break;
 
-        // case arrow keys: move trailer
+        // case arrow conversion_keys: move trailer
         case 37: // left arrow
-            keys[37] = onLeftKeyDown;
+            conversion_keys[37] = onLeftKeyDown;
             break;
         case 38: // up arrow
-            keys[38] = onUpKeyDown;
+            conversion_keys[38] = onUpKeyDown;
             break;
         case 39: // right arrow
-            keys[39] = onRightKeyDown;
+            conversion_keys[39] = onRightKeyDown;
             break;
         case 40: // down arrow
-            keys[40] = onDownKeyDown;
+            conversion_keys[40] = onDownKeyDown;
             break;
 
         // case letters: transition between truck and transformer
         case 81: // Q
-            keys[81] = onQKeyDown;
+            conversion_keys[81] = onQKeyDown;
             break;
         case 65: // A
-            keys[65] = onAKeyDown;
+            conversion_keys[65] = onAKeyDown;
             break;
         case 87: // W
-            keys[87] = onWKeyDown;
+            conversion_keys[87] = onWKeyDown;
             break;
         case 83: // S
-            keys[83] = onSKeyDown;
+            conversion_keys[83] = onSKeyDown;
             break;
         case 69: // E
-            keys[69] = onEKeyDown;
+            conversion_keys[69] = onEKeyDown;
             break;
         case 68: // D
-            keys[68] = onDKeyDown;
+            conversion_keys[68] = onDKeyDown;
             break;
         case 82: // R
-            keys[82] = onRKeyDown;
+            conversion_keys[82] = onRKeyDown;
             break;
         case 70: // F
-            keys[70] = onFKeyDown;
+            conversion_keys[70] = onFKeyDown;
             break;
 
         default:
@@ -769,5 +772,6 @@ function onKeyDown(e) {
 function onKeyUp(e){
     'use strict';
 
-    delete keys[e.keyCode];
+    delete conversion_keys[e.keyCode];
+    delete non_conversion_keys[e.keyCode];
 }
