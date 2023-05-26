@@ -7,6 +7,8 @@
 * Média de horas de trabalho: 10h
 */
 
+/* We can toggle the axis helper using the 'H' key */
+
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
