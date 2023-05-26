@@ -82,6 +82,78 @@ function init() {
 /* UPDATE */
 ////////////
 
+function onLeftKeyDown() { movementVector.x -= MOVEMENT_SPEED; }
+function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED; }
+function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED; }
+function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED; }
+
+function onQKeyDown() { // Q key
+    if (feetRotation < FEET_MAX_ROTATION) {
+        feetRotation += FEET_ROTATION_SPEED;
+        feet.rotateX(FEET_ROTATION_SPEED); 
+    }
+}
+function onAKeyDown() { // A key
+    if (feetRotation > FEET_MIN_ROTATION) {
+        feetRotation -= FEET_ROTATION_SPEED;
+        feet.rotateX(-FEET_ROTATION_SPEED);
+    }
+}
+function onWKeyDown() { // W key
+    if (legsRotation < LEGS_MAX_ROTATION) {
+        legsRotation += LEGS_ROTATION_SPEED;
+        inferiorBody.rotateX(LEGS_ROTATION_SPEED); 
+    }
+}
+function onSKeyDown() { // S key
+    if (legsRotation > LEGS_MIN_ROTATION) {
+        legsRotation -= LEGS_ROTATION_SPEED;
+        inferiorBody.rotateX(-LEGS_ROTATION_SPEED);
+    }
+}
+function onEKeyDown() { // E key
+    if (armsShift < ARMS_MAX_SHIFT) {
+        armsShift += ARMS_SHIFT_SPEED;
+        leftArm.position.x += ARMS_SHIFT_SPEED;
+        rightArm.position.x -= ARMS_SHIFT_SPEED;
+    }
+}
+function onDKeyDown() { // D key
+    if (armsShift > ARMS_MIN_SHIFT) {
+        armsShift -= ARMS_SHIFT_SPEED;
+        leftArm.position.x -= ARMS_SHIFT_SPEED;
+        rightArm.position.x += ARMS_SHIFT_SPEED;
+    }
+}
+function onRKeyDown() { // R key
+    if (headRotation < HEAD_MAX_ROTATION) {
+        headRotation += HEAD_ROTATION_SPEED;
+        head.rotateX(HEAD_ROTATION_SPEED); 
+    }
+}
+function onFKeyDown() { // F key
+    if (headRotation > HEAD_MIN_ROTATION) {
+        headRotation -= HEAD_ROTATION_SPEED;
+        head.rotateX(-HEAD_ROTATION_SPEED);
+    }
+}
+
+function on1KeyDown() { // 1 key
+    switchCamera(getTopCamera());
+}
+function on2KeyDown() { // 2 key
+    switchCamera(getSideCamera());
+}
+function on3KeyDown() { // 3 key
+    switchCamera(getFrontCamera());
+}
+function on4KeyDown() { // 4 key
+    switchCamera(getIsometricCamera());
+}
+function on5KeyDown() { // 5 key
+    switchCamera(getPerspectiveCamera());
+}
+
 function update(){
     'use strict';
 
@@ -613,78 +685,6 @@ function onResize() {
 
 function onKeyDown(e) {
     'use strict';
-
-    function onLeftKeyDown() { movementVector.x -= MOVEMENT_SPEED; }
-    function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED; }
-    function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED; }
-    function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED; }
-
-    function onQKeyDown() { // Q key
-        if (feetRotation < FEET_MAX_ROTATION) {
-            feetRotation += FEET_ROTATION_SPEED;
-            feet.rotateX(FEET_ROTATION_SPEED); 
-        }
-    }
-    function onAKeyDown() { // A key
-        if (feetRotation > FEET_MIN_ROTATION) {
-            feetRotation -= FEET_ROTATION_SPEED;
-            feet.rotateX(-FEET_ROTATION_SPEED);
-        }
-    }
-    function onWKeyDown() { // W key
-        if (legsRotation < LEGS_MAX_ROTATION) {
-            legsRotation += LEGS_ROTATION_SPEED;
-            inferiorBody.rotateX(LEGS_ROTATION_SPEED); 
-        }
-    }
-    function onSKeyDown() { // S key
-        if (legsRotation > LEGS_MIN_ROTATION) {
-            legsRotation -= LEGS_ROTATION_SPEED;
-            inferiorBody.rotateX(-LEGS_ROTATION_SPEED);
-        }
-    }
-    function onEKeyDown() { // E key
-        if (armsShift < ARMS_MAX_SHIFT) {
-            armsShift += ARMS_SHIFT_SPEED;
-            leftArm.position.x += ARMS_SHIFT_SPEED;
-            rightArm.position.x -= ARMS_SHIFT_SPEED;
-        }
-    }
-    function onDKeyDown() { // D key
-        if (armsShift > ARMS_MIN_SHIFT) {
-            armsShift -= ARMS_SHIFT_SPEED;
-            leftArm.position.x -= ARMS_SHIFT_SPEED;
-            rightArm.position.x += ARMS_SHIFT_SPEED;
-        }
-    }
-    function onRKeyDown() { // R key
-        if (headRotation < HEAD_MAX_ROTATION) {
-            headRotation += HEAD_ROTATION_SPEED;
-            head.rotateX(HEAD_ROTATION_SPEED); 
-        }
-    }
-    function onFKeyDown() { // F key
-        if (headRotation > HEAD_MIN_ROTATION) {
-            headRotation -= HEAD_ROTATION_SPEED;
-            head.rotateX(-HEAD_ROTATION_SPEED);
-        }
-    }
-
-    function on1KeyDown() { // 1 key
-        switchCamera(getTopCamera());
-    }
-    function on2KeyDown() { // 2 key
-        switchCamera(getSideCamera());
-    }
-    function on3KeyDown() { // 3 key
-        switchCamera(getFrontCamera());
-    }
-    function on4KeyDown() { // 4 key
-        switchCamera(getIsometricCamera());
-    }
-    function on5KeyDown() { // 5 key
-        switchCamera(getPerspectiveCamera());
-    }
 
     switch (e.keyCode) {
 
