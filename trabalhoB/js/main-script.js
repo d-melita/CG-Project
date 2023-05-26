@@ -92,54 +92,46 @@ function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
 function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
 function onQKeyDown() { // Q key
-    if (feetRotation < FEET_MAX_ROTATION) {
-        feetRotation += FEET_ROTATION_SPEED * elapsedTime;
-        feet.rotateX(FEET_ROTATION_SPEED * elapsedTime); 
-    }
+    let rotate = Math.min(FEET_ROTATION_SPEED * elapsedTime, FEET_MAX_ROTATION - feetRotation);
+    feetRotation += rotate;
+    feet.rotateX(rotate); 
 }
 function onAKeyDown() { // A key
-    if (feetRotation > FEET_MIN_ROTATION) {
-        feetRotation -= FEET_ROTATION_SPEED * elapsedTime;
-        feet.rotateX(-FEET_ROTATION_SPEED * elapsedTime);
-    }
+    let rotate = Math.min(FEET_ROTATION_SPEED * elapsedTime, feetRotation - FEET_MIN_ROTATION);
+    feetRotation -= rotate;
+    feet.rotateX(-rotate);
 }
 function onWKeyDown() { // W key
-    if (legsRotation < LEGS_MAX_ROTATION) {
-        legsRotation += LEGS_ROTATION_SPEED * elapsedTime;
-        inferiorBody.rotateX(LEGS_ROTATION_SPEED * elapsedTime); 
-    }
+    let rotate = Math.min(LEGS_ROTATION_SPEED * elapsedTime, LEGS_MAX_ROTATION - legsRotation);
+    legsRotation += rotate;
+    inferiorBody.rotateX(rotate); 
 }
 function onSKeyDown() { // S key
-    if (legsRotation > LEGS_MIN_ROTATION) {
-        legsRotation -= LEGS_ROTATION_SPEED * elapsedTime;
-        inferiorBody.rotateX(-LEGS_ROTATION_SPEED * elapsedTime);
-    }
+    let rotate = Math.min(LEGS_ROTATION_SPEED * elapsedTime, legsRotation - LEGS_MIN_ROTATION);
+    legsRotation -= rotate;
+    inferiorBody.rotateX(-rotate);
 }
 function onEKeyDown() { // E key
-    if (armsShift < ARMS_MAX_SHIFT) {
-        armsShift += ARMS_SHIFT_SPEED * elapsedTime;
-        leftArm.position.x += ARMS_SHIFT_SPEED * elapsedTime;
-        rightArm.position.x -= ARMS_SHIFT_SPEED * elapsedTime;
-    }
+    let shift = Math.min(ARMS_SHIFT_SPEED * elapsedTime, ARMS_MAX_SHIFT - armsShift);
+    armsShift += shift;
+    leftArm.position.x += shift;
+    rightArm.position.x -= shift;
 }
 function onDKeyDown() { // D key
-    if (armsShift > ARMS_MIN_SHIFT) {
-        armsShift -= ARMS_SHIFT_SPEED * elapsedTime;
-        leftArm.position.x -= ARMS_SHIFT_SPEED * elapsedTime;
-        rightArm.position.x += ARMS_SHIFT_SPEED * elapsedTime;
-    }
+    let shift = Math.min(ARMS_SHIFT_SPEED * elapsedTime, armsShift - ARMS_MIN_SHIFT);
+    armsShift -= shift;
+    leftArm.position.x -= shift;
+    rightArm.position.x += shift;
 }
 function onRKeyDown() { // R key
-    if (headRotation < HEAD_MAX_ROTATION) {
-        headRotation += HEAD_ROTATION_SPEED * elapsedTime;
-        head.rotateX(HEAD_ROTATION_SPEED * elapsedTime); 
-    }
+    let rotate = Math.min(HEAD_ROTATION_SPEED * elapsedTime, HEAD_MAX_ROTATION - headRotation);
+    headRotation += rotate;
+    head.rotateX(rotate); 
 }
 function onFKeyDown() { // F key
-    if (headRotation > HEAD_MIN_ROTATION) {
-        headRotation -= HEAD_ROTATION_SPEED * elapsedTime;
-        head.rotateX(-HEAD_ROTATION_SPEED * elapsedTime);
-    }
+    let rotate = Math.min(HEAD_ROTATION_SPEED * elapsedTime, headRotation - HEAD_MIN_ROTATION);
+    headRotation -= rotate;
+    head.rotateX(-rotate);
 }
 
 function on1KeyDown() { // 1 key
