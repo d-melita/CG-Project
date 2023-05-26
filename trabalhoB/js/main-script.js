@@ -3,6 +3,7 @@
 * CG 2022/2023
 * Diogo Melita ist199202
 * João Rocha ist199256
+* Grupo 33 - Alameda
 */
 
 //////////////////////
@@ -38,6 +39,7 @@ const X_FOREARM = 2, Y_FOREARM = 1, Z_FOREARM = 6;
 const ESCAPE_RADIUS = 0.5, ESCAPE_HEIGHT = 4, ESCAPE_OFFSET = 2;
 const X_HEAD = 2, Y_HEAD = 2, Z_HEAD = 2;
 const EYE_RADIUS = 0.25;
+const EYE_HEIGHT = 0.01;
 const X_ANTENNA = 0.5, Y_ANTENNA = 0.5, Z_ANTENNA = 0.5;
 
 const Z_TRAILER_INITIAL_POSITION = -10;
@@ -140,7 +142,7 @@ function getOrthographicCamera(pos_x, pos_y, pos_z) {
   const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
   camera.position.set(pos_x, pos_y, pos_z);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
-  return camera
+  return camera;
 }
 
 function getTopCamera() {
@@ -327,8 +329,8 @@ function addEyes(obj) {
 
     var eyes = new THREE.Object3D();
 
-    addCylinder(eyes, X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0.01, 'x', Math.PI/2, BLUE);
-    addCylinder(eyes, -X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, 0.01, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, EYE_HEIGHT, 'x', Math.PI/2, BLUE);
+    addCylinder(eyes, -X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, EYE_HEIGHT, 'x', Math.PI/2, BLUE);
 
     obj.add(eyes);
 }
@@ -501,7 +503,7 @@ function addTrailer(x, y, z) {
 /* CHECK COLLISIONS */
 //////////////////////
 
-function checkTruckMode() {
+function checkTruckMode() { // check if transformer is in truck mode
     'use strict';
 
     var THRESHOLD = 0.05;
@@ -617,70 +619,70 @@ function onKeyDown(e) {
     function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED; }
     function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED; }
 
-    function onQKeyDown() { 
+    function onQKeyDown() { // Q key
         if (feetRotation < FEET_MAX_ROTATION) {
             feetRotation += FEET_ROTATION_SPEED;
             feet.rotateX(FEET_ROTATION_SPEED); 
         }
     }
-    function onAKeyDown() { 
+    function onAKeyDown() { // A key
         if (feetRotation > FEET_MIN_ROTATION) {
             feetRotation -= FEET_ROTATION_SPEED;
             feet.rotateX(-FEET_ROTATION_SPEED);
         }
     }
-    function onWKeyDown() { 
+    function onWKeyDown() { // W key
         if (legsRotation < LEGS_MAX_ROTATION) {
             legsRotation += LEGS_ROTATION_SPEED;
             inferiorBody.rotateX(LEGS_ROTATION_SPEED); 
         }
     }
-    function onSKeyDown() { 
+    function onSKeyDown() { // S key
         if (legsRotation > LEGS_MIN_ROTATION) {
             legsRotation -= LEGS_ROTATION_SPEED;
             inferiorBody.rotateX(-LEGS_ROTATION_SPEED);
         }
     }
-    function onEKeyDown() { 
+    function onEKeyDown() { // E key
         if (armsShift < ARMS_MAX_SHIFT) {
             armsShift += ARMS_SHIFT_SPEED;
             leftArm.position.x += ARMS_SHIFT_SPEED;
             rightArm.position.x -= ARMS_SHIFT_SPEED;
         }
     }
-    function onDKeyDown() {
+    function onDKeyDown() { // D key
         if (armsShift > ARMS_MIN_SHIFT) {
             armsShift -= ARMS_SHIFT_SPEED;
             leftArm.position.x -= ARMS_SHIFT_SPEED;
             rightArm.position.x += ARMS_SHIFT_SPEED;
         }
     }
-    function onRKeyDown() { 
+    function onRKeyDown() { // R key
         if (headRotation < HEAD_MAX_ROTATION) {
             headRotation += HEAD_ROTATION_SPEED;
             head.rotateX(HEAD_ROTATION_SPEED); 
         }
     }
-    function onFKeyDown() { 
+    function onFKeyDown() { // F key
         if (headRotation > HEAD_MIN_ROTATION) {
             headRotation -= HEAD_ROTATION_SPEED;
             head.rotateX(-HEAD_ROTATION_SPEED);
         }
     }
 
-    function on1KeyDown() {
+    function on1KeyDown() { // 1 key
         switchCamera(getTopCamera());
     }
-    function on2KeyDown() {
+    function on2KeyDown() { // 2 key
         switchCamera(getSideCamera());
     }
-    function on3KeyDown() {
+    function on3KeyDown() { // 3 key
         switchCamera(getFrontCamera());
     }
-    function on4KeyDown() {
+    function on4KeyDown() { // 4 key
         switchCamera(getIsometricCamera());
     }
-    function on5KeyDown() {
+    function on5KeyDown() { // 5 key
         switchCamera(getPerspectiveCamera());
     }
 
