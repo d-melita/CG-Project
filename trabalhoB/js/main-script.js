@@ -13,6 +13,7 @@
 
 var camera, scene, renderer;
 
+var axesHelper;
 var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
@@ -156,6 +157,11 @@ function on6KeyDown() { // 6 key
     delete non_conversion_keys[54];
 }
 
+function onHKeyDown() { // H key
+    axesHelper.visible = !axesHelper.visible;
+    delete non_conversion_keys[72];
+}
+
 function update(){
     'use strict';
 
@@ -203,7 +209,8 @@ function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
-    scene.add(new THREE.AxesHelper(20));
+    axesHelper = new THREE.AxesHelper(20);
+    scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
 
     addTrailer(0, 0, Z_TRAILER_INITIAL_POSITION);
@@ -755,6 +762,10 @@ function onKeyDown(e) {
             break;
         case 70: // F
             conversion_keys[70] = onFKeyDown;
+            break;
+
+        case 72: // H
+            non_conversion_keys[72] = onHKeyDown;
             break;
 
         default:
