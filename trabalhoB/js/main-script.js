@@ -595,10 +595,9 @@ function checkTruckMode() { // check if transformer is in truck mode
 function checkTrailerPositioned() {
     'use strict';
 
-    var THRESHOLD = TRAILER_CONNECTION_SPEED/2;
     var trailerHitchPosition = new THREE.Vector3();
     trailerHitch.getWorldPosition(trailerHitchPosition);
-    return trailerHitchPosition.distanceTo(TRAILER_CONNECTION) <= THRESHOLD;
+    return trailerHitchPosition.distanceTo(TRAILER_CONNECTION) == 0;
 }
 
 function checkCollision(obj1, obj2){
@@ -616,10 +615,16 @@ function checkCollision(obj1, obj2){
 function moveTrailerToConnection() {
     'use strict';
 
-    trailerHitch.getWorldPosition(movementVector);
-    movementVector.multiplyScalar(-1);
+    var trailerHitchPosition = new THREE.Vector3();
+    trailerHitch.getWorldPosition(trailerHitchPosition);
+
+    movementVector.addScaledVector(trailerHitchPosition, -1);
     movementVector.add(TRAILER_CONNECTION);
-    movementVector.multiplyScalar(TRAILER_CONNECTION_SPEED)
+
+    let THRESHOLD = 0.05;
+    if (trailerHitchPosition.distanceTo(TRAILER_CONNECTION) >= THRESHOLD) {
+        movementVector.multiplyScalar(TRAILER_CONNECTION_SPEED)
+    }
 
     trailer.position.add(movementVector);
 }
