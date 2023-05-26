@@ -157,6 +157,12 @@ function on4KeyDown() { // 4 key
 function on5KeyDown() { // 5 key
     switchCamera(getPerspectiveCamera());
 }
+function on6KeyDown() { // 6 key
+    for (var i = 0; i < objects.length; i++) {
+        objects[i].material.wireframe = !objects[i].material.wireframe;
+    }
+    delete keys[54];
+}
 
 function update(){
     'use strict';
@@ -708,9 +714,7 @@ function onKeyDown(e) {
             keys[53] = on5KeyDown;
             break;
         case 54: // 6
-            for (var i = 0; i < objects.length; i++) {
-                objects[i].material.wireframe = !objects[i].material.wireframe;
-            }
+            keys[54] = on6KeyDown;
             break;
 
         // case arrow keys: move trailer
