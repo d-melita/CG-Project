@@ -16,7 +16,7 @@ var camera, scene, renderer;
 var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
-var objects = [];
+var materials = [];
 
 const frustumSize = 50;
 
@@ -158,8 +158,8 @@ function on5KeyDown() { // 5 key
     switchCamera(getPerspectiveCamera());
 }
 function on6KeyDown() { // 6 key
-    for (var i = 0; i < objects.length; i++) {
-        objects[i].material.wireframe = !objects[i].material.wireframe;
+    for (var i = 0; i < materials.length; i++) {
+        materials[i].wireframe = !materials[i].wireframe;
     }
     delete keys[54];
 }
@@ -286,7 +286,7 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
 
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
-    objects.push(cylinder);
+    materials.push(material);
 }
 
 function addBox(obj, x, y, z, length, height, width, color) {
@@ -298,7 +298,7 @@ function addBox(obj, x, y, z, length, height, width, color) {
 
     box.position.set(x, y, z);
     obj.add(box);
-    objects.push(box);
+    materials.push(material);
 }
 
 function addWheel(obj, x, y, z) {
