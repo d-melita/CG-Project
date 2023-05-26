@@ -1,9 +1,10 @@
 /* 
-* Transformer Project
+* Trabalho B - Transformer
 * CG 2022/2023
 * Diogo Melita ist199202
 * João Rocha ist199256
 * Grupo 33 - Alameda
+* Média de horas de trabalho: 10h
 */
 
 //////////////////////
