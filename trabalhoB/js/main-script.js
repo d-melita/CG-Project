@@ -15,13 +15,15 @@ var camera, scene, renderer;
 var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
+var objects = [];
+
 const frustumSize = 50;
 
 var armsShift = 2, feetRotation = 0, legsRotation = 0, headRotation = 0;
-const ARMS_MIN_SHIFT = 0, ARMS_MAX_SHIFT = 2, ARMS_SHIFT_SPEED = 0.04;
-const FEET_MIN_ROTATION = 0, FEET_MAX_ROTATION = Math.PI, FEET_ROTATION_SPEED = 0.04;
-const LEGS_MIN_ROTATION = 0, LEGS_MAX_ROTATION = Math.PI/2, LEGS_ROTATION_SPEED = 0.02;
-const HEAD_MIN_ROTATION = -Math.PI, HEAD_MAX_ROTATION = 0, HEAD_ROTATION_SPEED = 0.04;
+const ARMS_MIN_SHIFT = 0, ARMS_MAX_SHIFT = 2, ARMS_SHIFT_SPEED = 5;
+const FEET_MIN_ROTATION = 0, FEET_MAX_ROTATION = Math.PI, FEET_ROTATION_SPEED = 5;
+const LEGS_MIN_ROTATION = 0, LEGS_MAX_ROTATION = Math.PI/2, LEGS_ROTATION_SPEED = 2;
+const HEAD_MIN_ROTATION = -Math.PI, HEAD_MAX_ROTATION = 0, HEAD_ROTATION_SPEED = 5;
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 
@@ -41,7 +43,6 @@ const X_HEAD = 2, Y_HEAD = 2, Z_HEAD = 2;
 const EYE_RADIUS = 0.25;
 const EYE_HEIGHT = 0.01;
 const X_ANTENNA = 0.5, Y_ANTENNA = 0.5, Z_ANTENNA = 0.5;
-
 const Z_TRAILER_INITIAL_POSITION = -10;
 const X_TRAILER_TOP = 8, Y_TRAILER_TOP = 5, Z_TRAILER_TOP = 24;
 const X_TRAILER_HITCH = 2, Y_TRAILER_HITCH = 1, Z_TRAILER_HITCH = 1;
@@ -49,13 +50,15 @@ const X_TRAILER_BOTTOM = 6, Y_TRAILER_BOTTOM = 3, Z_TRAILER_BOTTOM = 10;
 const TRAILER_BACK_WHEEL_POSITION = -17.5, TRAILER_MIDDLE_WHEEL_POSITION = -21.5;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
-const MOVEMENT_SPEED = 0.2;
+const MOVEMENT_SPEED = 15;
 
 var trailerState = 'detached';
 const TRAILER_CONNECTION = new THREE.Vector3(0, 2*WHEEL_RADIUS + Y_TRAILER_HITCH/2, Z_TRANSFORMER_POSITION - Y_TIGHT - Z_TRAILER_HITCH);
 const TRAILER_CONNECTION_SPEED = 0.1;
 
 var keys = {};
+var clock = new THREE.Clock();
+var elapsedTime;
 
 ////////////////////////////////
 /* INITIALIZE ANIMATION CYCLE */
@@ -82,59 +85,59 @@ function init() {
 /* UPDATE */
 ////////////
 
-function onLeftKeyDown() { movementVector.x -= MOVEMENT_SPEED; }
-function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED; }
-function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED; }
-function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED; }
+function onLeftKeyDown() { movementVector.x -= MOVEMENT_SPEED * elapsedTime; }
+function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED * elapsedTime; }
+function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
+function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
 function onQKeyDown() { // Q key
     if (feetRotation < FEET_MAX_ROTATION) {
-        feetRotation += FEET_ROTATION_SPEED;
-        feet.rotateX(FEET_ROTATION_SPEED); 
+        feetRotation += FEET_ROTATION_SPEED * elapsedTime;
+        feet.rotateX(FEET_ROTATION_SPEED * elapsedTime); 
     }
 }
 function onAKeyDown() { // A key
     if (feetRotation > FEET_MIN_ROTATION) {
-        feetRotation -= FEET_ROTATION_SPEED;
-        feet.rotateX(-FEET_ROTATION_SPEED);
+        feetRotation -= FEET_ROTATION_SPEED * elapsedTime;
+        feet.rotateX(-FEET_ROTATION_SPEED * elapsedTime);
     }
 }
 function onWKeyDown() { // W key
     if (legsRotation < LEGS_MAX_ROTATION) {
-        legsRotation += LEGS_ROTATION_SPEED;
-        inferiorBody.rotateX(LEGS_ROTATION_SPEED); 
+        legsRotation += LEGS_ROTATION_SPEED * elapsedTime;
+        inferiorBody.rotateX(LEGS_ROTATION_SPEED * elapsedTime); 
     }
 }
 function onSKeyDown() { // S key
     if (legsRotation > LEGS_MIN_ROTATION) {
-        legsRotation -= LEGS_ROTATION_SPEED;
-        inferiorBody.rotateX(-LEGS_ROTATION_SPEED);
+        legsRotation -= LEGS_ROTATION_SPEED * elapsedTime;
+        inferiorBody.rotateX(-LEGS_ROTATION_SPEED * elapsedTime);
     }
 }
 function onEKeyDown() { // E key
     if (armsShift < ARMS_MAX_SHIFT) {
-        armsShift += ARMS_SHIFT_SPEED;
-        leftArm.position.x += ARMS_SHIFT_SPEED;
-        rightArm.position.x -= ARMS_SHIFT_SPEED;
+        armsShift += ARMS_SHIFT_SPEED * elapsedTime;
+        leftArm.position.x += ARMS_SHIFT_SPEED * elapsedTime;
+        rightArm.position.x -= ARMS_SHIFT_SPEED * elapsedTime;
     }
 }
 function onDKeyDown() { // D key
     if (armsShift > ARMS_MIN_SHIFT) {
-        armsShift -= ARMS_SHIFT_SPEED;
-        leftArm.position.x -= ARMS_SHIFT_SPEED;
-        rightArm.position.x += ARMS_SHIFT_SPEED;
+        armsShift -= ARMS_SHIFT_SPEED * elapsedTime;
+        leftArm.position.x -= ARMS_SHIFT_SPEED * elapsedTime;
+        rightArm.position.x += ARMS_SHIFT_SPEED * elapsedTime;
     }
 }
 function onRKeyDown() { // R key
     if (headRotation < HEAD_MAX_ROTATION) {
-        headRotation += HEAD_ROTATION_SPEED;
-        head.rotateX(HEAD_ROTATION_SPEED); 
+        headRotation += HEAD_ROTATION_SPEED * elapsedTime;
+        head.rotateX(HEAD_ROTATION_SPEED * elapsedTime); 
     }
 }
 function onFKeyDown() { // F key
     if (headRotation > HEAD_MIN_ROTATION) {
-        headRotation -= HEAD_ROTATION_SPEED;
-        head.rotateX(-HEAD_ROTATION_SPEED);
+        headRotation -= HEAD_ROTATION_SPEED * elapsedTime;
+        head.rotateX(-HEAD_ROTATION_SPEED * elapsedTime);
     }
 }
 
@@ -183,7 +186,7 @@ function render() {
 
 function animate() {
     'use strict';
-
+    elapsedTime = clock.getDelta();
     update();
     render();
 
@@ -276,6 +279,7 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
 
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
+    objects.push(cylinder);
 }
 
 function addBox(obj, x, y, z, length, height, width, color) {
@@ -287,6 +291,7 @@ function addBox(obj, x, y, z, length, height, width, color) {
 
     box.position.set(x, y, z);
     obj.add(box);
+    objects.push(box);
 }
 
 function addWheel(obj, x, y, z) {
@@ -641,9 +646,6 @@ function updateAABBBoxes() {
     );
     var vec = new THREE.Vector3();
     transformer.getWorldPosition(vec);
-    console.log(vec);
-    console.log(transformer.min);
-    console.log(transformer.max);
 }
 
 function handleCollisions(){
@@ -705,11 +707,9 @@ function onKeyDown(e) {
             keys[53] = on5KeyDown;
             break;
         case 54: // 6
-            scene.traverse(function (node) {
-                if (node instanceof THREE.Mesh) {
-                    node.material.wireframe = !node.material.wireframe;
-                }
-            });
+            for (var i = 0; i < objects.length; i++) {
+                objects[i].material.wireframe = !objects[i].material.wireframe;
+            }
             break;
 
         // case arrow keys: move trailer
