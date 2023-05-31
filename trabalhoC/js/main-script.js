@@ -16,6 +16,7 @@
 var camera, scene, renderer;
 
 var axesHelper;
+var house;
 var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
@@ -167,17 +168,17 @@ function onHKeyDown() { // H key
 function update(){
     'use strict';
 
-    movementVector.set(0, 0, 0);
+    //movementVector.set(0, 0, 0);
 
     for (const [key, val] of Object.entries(non_conversion_keys))
         val.call();
 
-    handleCollisions();
-    if (trailerState == 'attaching') return;
+    //handleCollisions();
+    //if (trailerState == 'attaching') return;
 
     for (const [key, val] of Object.entries(conversion_keys))
         val.call();
-    trailer.position.add(movementVector);
+    //trailer.position.add(movementVector);
 }
 
 /////////////
@@ -213,20 +214,50 @@ function createScene() {
     scene = new THREE.Scene();
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
+    scene.background = new THREE.Color(BACKGROUND_COLOR);
+    addHouse(0, 4, 0);
 }
 
 //////////////////////
 /* CREATE CAMERA(S) */
 //////////////////////
 
-function getPerspectiveCamera() {
-  const camera = new THREE.PerspectiveCamera(
-    75, window.innerWidth / window.innerHeight, 0.1, 100
-  );
-  camera.position.set(30, 30, 30);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
-  return camera;
-}
+function getOrthographicCamera(pos_x, pos_y, pos_z) {
+    const aspect = window.innerWidth / window.innerHeight;
+    const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
+    camera.position.set(pos_x, pos_y, pos_z);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    return camera;
+  }
+  
+  function getTopCamera() {
+    return getOrthographicCamera(0, 30, 0);
+  }
+  
+  function getSideCamera() {
+    return getOrthographicCamera(30, 0, 0);
+  }
+  
+  function getFrontCamera() {
+    return getOrthographicCamera(0, 0, 30);
+  }
+  
+  function getIsometricCamera() {
+    return getOrthographicCamera(30, 30, 30);
+  }
+  
+  function getPerspectiveCamera() {
+    const camera = new THREE.PerspectiveCamera(
+      75, window.innerWidth / window.innerHeight, 0.1, 100
+    );
+    camera.position.set(30, 30, 30);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    return camera;
+  }
+  
+  function switchCamera(new_camera) {
+    camera = new_camera;
+  }
   
 /////////////////////
 /* CREATE LIGHT(S) */
@@ -271,6 +302,35 @@ function addBox(obj, x, y, z, length, height, width, color) {
     box.position.set(x, y, z);
     obj.add(box);
     materials.push(material);
+}
+
+function addCone(obj, x, y, z, baseRadius, height, segments, faces, color) {
+    'use strict';
+
+    var geometry = new THREE.ConeGeometry(baseRadius, height, segments, faces);
+    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+    var cone = new THREE.Mesh(geometry, material);
+
+    cone.position.set(x, y, z);
+    obj.add(cone);
+    materials.push(material);
+}
+
+function addHouse(x, y, z) {
+    'use strict';
+
+    house = new THREE.Object3D();
+    addBox(house, 0, 0, 0, 6, 8, 16, WHITE); // main body
+    addBox(house, 3, -2, -3, 0.001, 4, 2, BLACK); // door
+    addBox(house, 3, 0, 6, 0.001, 3, 2, BLUE); // window 1
+    addBox(house, 3, 0, 3, 0.001, 3, 2, BLUE); // window 2
+    addBox(house, 3, 0, 0, 0.001, 3, 2, BLUE); // window 3
+    addBox(house, 3, 0, -6, 0.001, 3, 2, BLUE); // window 4
+    addBox(house, -1.5, 0, 8, 1, 3, 0.001, BLUE); // window 5
+    addBox(house, 1.5, 0, 8, 1, 3, 0.001, BLUE); // window 6
+    addCone(house, 0, 5, 0, 3, 2, 4, 4, RED); // roof
+    house.position.set(x, y, z);
+    scene.add(house);
 }
 
 //////////////////////
