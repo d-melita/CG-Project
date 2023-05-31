@@ -1,10 +1,10 @@
 /* 
-* Trabalho B - Transformer
+* Trabalho C - Transformer
 * CG 2022/2023
 * Diogo Melita ist199202
 * João Rocha ist199256
 * Grupo 33 - Alameda
-* Média de horas de trabalho: 10h
+* Média de horas de trabalho: 
 */
 
 /* We can toggle the axis helper using the 'H' key */
@@ -77,7 +77,7 @@ function init() {
 
     createScene();
 
-    camera = getIsometricCamera();
+    camera = getPerspectiveCamera();
     render();
 
     window.addEventListener("resize", onResize);
@@ -213,39 +213,11 @@ function createScene() {
     scene = new THREE.Scene();
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
-    scene.background = new THREE.Color(BACKGROUND_COLOR);
-
-    addTrailer(0, 0, Z_TRAILER_INITIAL_POSITION);
-    addTransformer(0, -Y_LEG, Z_TRANSFORMER_POSITION);
 }
 
 //////////////////////
 /* CREATE CAMERA(S) */
 //////////////////////
-
-function getOrthographicCamera(pos_x, pos_y, pos_z) {
-  const aspect = window.innerWidth / window.innerHeight;
-  const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
-  camera.position.set(pos_x, pos_y, pos_z);
-  camera.lookAt(new THREE.Vector3(0, 0, 0));
-  return camera;
-}
-
-function getTopCamera() {
-  return getOrthographicCamera(0, 30, 0);
-}
-
-function getSideCamera() {
-  return getOrthographicCamera(30, 0, 0);
-}
-
-function getFrontCamera() {
-  return getOrthographicCamera(0, 0, 30);
-}
-
-function getIsometricCamera() {
-  return getOrthographicCamera(30, 30, 30);
-}
 
 function getPerspectiveCamera() {
   const camera = new THREE.PerspectiveCamera(
@@ -254,10 +226,6 @@ function getPerspectiveCamera() {
   camera.position.set(30, 30, 30);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   return camera;
-}
-
-function switchCamera(new_camera) {
-  camera = new_camera;
 }
   
 /////////////////////
@@ -305,288 +273,6 @@ function addBox(obj, x, y, z, length, height, width, color) {
     materials.push(material);
 }
 
-function addWheel(obj, x, y, z) {
-    'use strict';
-
-    var wheel = new THREE.Object3D();
-
-    addCylinder(wheel, x, y, z, WHEEL_RADIUS, WHEEL_HEIGHT, 'z', Math.PI/2, BLACK);
-
-    obj.add(wheel);
-}
-
-function addFeet(obj) {
-    'use strict';
-
-    feet = new THREE.Object3D();
-
-    addBox(feet, X_FOOT/2, Y_FOOT/2, Z_FOOT/2, X_FOOT, Y_FOOT, Z_FOOT, BLUE);
-    addBox(feet, -X_FOOT/2, Y_FOOT/2, Z_FOOT/2, X_FOOT, Y_FOOT, Z_FOOT, BLUE);
-
-    feet.position.set(0, -Y_LEG/2, Z_LEG/2);
-    obj.add(feet);
-}
-
-function addLeg(obj, left) {
-    'use strict';
-
-    var leg = new THREE.Object3D();
-    var x_mult;
-    if (left) x_mult = 1; else x_mult = -1;
-
-    addBox(leg, 0, 0, 0, X_LEG, Y_LEG, Z_LEG, BLUE);
-    addWheel(leg, 
-        x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), BACK_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2
-    );
-    addWheel(leg, 
-        x_mult * (X_LEG/2 + WHEEL_HEIGHT/2), MIDDLE_WHEEL_OFFSET, WHEEL_RADIUS - Z_LEG/2
-    );
-
-    leg.position.set(x_mult * X_LEG/2, 0, 0);
-
-    obj.add(leg);
-}
-
-function addLegs(obj) {
-    'use strict';
-
-    var legs = new THREE.Object3D();
-
-    addLeg(legs, true);
-    addLeg(legs, false);
-
-    obj.add(legs);
-}
-
-function addLegsAndFeet(obj) {
-    'use strict';
-
-    var legsAndFeet = new THREE.Object3D();
-
-    addLegs(legsAndFeet);
-    addFeet(legsAndFeet);
-
-    legsAndFeet.position.set(0, - Y_TIGHT - Y_LEG/2, Z_LEG/2);
-    obj.add(legsAndFeet);
-}
-
-function addTights(obj) {
-    'use strict';
-
-    var tights = new THREE.Object3D();
-
-    addBox(tights, -X_TIGHT/2, 0, 0, X_TIGHT, Y_TIGHT, Z_TIGHT, GREY);
-    addBox(tights, X_TIGHT/2, 0, 0, X_TIGHT, Y_TIGHT, Z_TIGHT, GREY);
-
-    tights.position.set(0, -Y_TIGHT/2, Z_TIGHT/2);
-    obj.add(tights);
-}
-
-function addInferiorBody(obj) {
-    'use strict';
-
-    inferiorBody = new THREE.Object3D();
-
-    addTights(inferiorBody);
-    addLegsAndFeet(inferiorBody);
-
-    inferiorBody.position.set(0, Y_LEG + Y_TIGHT, 0);
-    obj.add(inferiorBody);
-}
-
-function addAntennas(obj) {
-    'use strict';
-
-    var antennas = new THREE.Object3D();
-
-    addBox(antennas, 
-        X_HEAD/2 - X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, 
-        X_ANTENNA, Y_ANTENNA, Z_ANTENNA, 
-    BLUE);
-    addBox(antennas, 
-        - X_HEAD/2 + X_ANTENNA/2, Y_HEAD/2, Z_HEAD/2, 
-        X_ANTENNA, Y_ANTENNA, Z_ANTENNA, 
-    BLUE);
-
-    antennas.position.set(0, Y_HEAD/2 + Y_ANTENNA/2, 0);
-    obj.add(antennas);
-}
-
-function addEyes(obj) {
-    'use strict';
-
-    var eyes = new THREE.Object3D();
-
-    addCylinder(eyes, X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, EYE_HEIGHT, 'x', Math.PI/2, BLUE);
-    addCylinder(eyes, -X_HEAD/4, 3*Y_HEAD/4, Z_HEAD, EYE_RADIUS, EYE_HEIGHT, 'x', Math.PI/2, BLUE);
-
-    obj.add(eyes);
-}
-
-function addHead(obj) {
-    'use strict';
-
-    head = new THREE.Object3D();
-
-    addBox(head, 0, Y_HEAD/2, Z_HEAD/2, X_HEAD, Y_HEAD, Z_HEAD, DARK_RED);
-    addAntennas(head);
-    addEyes(head);
-
-    head.position.set(0, Y_CHEST/2, -Z_CHEST/2);
-    obj.add(head);
-}
-
-function addArm(obj, left) {
-    'use strict';
-
-    var arm = new THREE.Object3D();
-    var x_mult; if(left) x_mult = 1; else x_mult = -1;
-
-    addBox(arm, 0, 0, 0, X_ARM, Y_ARM, Z_ARM, DARK_RED);
-    addBox(arm, 
-        x_mult * (X_ARM/2 - X_FOREARM/2), -Y_ARM/2 - Y_FOREARM/2, - Z_ARM/2 + Z_FOREARM/2, 
-        X_FOREARM, Y_FOREARM, Z_FOREARM, 
-    DARK_RED)
-    addCylinder(arm, 
-        0, ESCAPE_OFFSET, - Z_ARM/2 - ESCAPE_RADIUS, 
-        ESCAPE_RADIUS, ESCAPE_HEIGHT, 
-    '', 0, GREY);
-
-    arm.position.set(x_mult * (armsShift + X_CHEST/2 - X_ARM/2), 0, - Z_CHEST/2 - Z_ARM/2);
-    obj.add(arm);
-
-    return arm;
-}
-
-function addArms(obj) {
-    'use strict';
-
-    var arms = new THREE.Object3D();
-    leftArm = addArm(arms, true);
-    rightArm = addArm(arms, false);
-
-    obj.add(arms);
-}
-
-function addChest(obj) {
-    'use strict';
-
-    var chest = new THREE.Object3D();
-
-    addArms(chest);
-    addHead(chest);
-    addBox(chest, 0, 0, 0, X_CHEST, Y_CHEST, Z_CHEST, RED);
-
-    chest.position.set(0, Y_ABDOMEN + Y_CHEST/2, Z_CHEST/2);
-    obj.add(chest);
-}
-
-function addAbdomen(obj) {
-    'use strict';
-
-    var abdomen = new THREE.Object3D();
-
-    addBox(abdomen, 
-        0, Y_ABDOMEN/2, Z_ABDOMEN/2, 
-        X_ABDOMEN, Y_ABDOMEN, Z_ABDOMEN, 
-    RED);
-
-    obj.add(abdomen);
-}
-
-function addWaist(obj) {
-    'use strict';
-
-    var waist = new THREE.Object3D();
-
-    addBox(waist, 0, 0, 0, X_WAIST, Y_WAIST, Z_WAIST, GREY);
-    addWheel(waist, 
-        X_WAIST/2 - WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS
-    );
-    addWheel(waist, 
-        - X_WAIST/2 + WHEEL_HEIGHT/2, - Y_WAIST + WHEEL_RADIUS, - Z_WAIST/2 - WHEEL_RADIUS
-    );
-
-    waist.position.set(0, - Y_WAIST/2, Z_CHEST - Z_WAIST/2);
-    obj.add(waist);
-}
-
-function addSuperiorBody(obj) {
-    'use strict';
-
-    var superiorBody = new THREE.Object3D();
-
-    addWaist(superiorBody);
-    addAbdomen(superiorBody);
-    addChest(superiorBody);
-
-    superiorBody.position.set(0, Y_LEG + Y_TIGHT, 0);
-    obj.add(superiorBody);
-}
-
-function addTransformer(x, y, z) {
-    'use strict';
-
-    transformer = new THREE.Object3D();
-
-    addInferiorBody(transformer);
-    addSuperiorBody(transformer);
-
-    // Vectors for AABB Box
-    transformer.min = new THREE.Vector3();
-    transformer.max = new THREE.Vector3();
-
-    transformer.position.set(x, y, z);
-    scene.add(transformer);
-}
-
-function addTrailerHitch(obj) {
-    'use strict';
-
-    trailerHitch = new THREE.Object3D();
-
-    addBox(trailerHitch, 0, 0, 0, X_TRAILER_HITCH, Y_TRAILER_HITCH, Z_TRAILER_HITCH, BLACK);
-
-    trailerHitch.position.set( 0, 1 + Y_TRAILER_BOTTOM - Y_TRAILER_HITCH/2, -Z_TRAILER_HITCH/2);
-    obj.add(trailerHitch);
-}
-
-function addTrailer(x, y, z) {
-    'use strict';
-
-    trailer = new THREE.Object3D();
-
-    addBox(trailer, 
-        0, 1 + Y_TRAILER_BOTTOM + Y_TRAILER_TOP/2, -Z_TRAILER_TOP/2, 
-        X_TRAILER_TOP, Y_TRAILER_TOP, Z_TRAILER_TOP, 
-    WHITE);
-    addBox(trailer, 
-        0, 1 + Y_TRAILER_BOTTOM/2, - Z_TRAILER_TOP + Z_TRAILER_BOTTOM/2, 
-        X_TRAILER_BOTTOM, Y_TRAILER_BOTTOM, Z_TRAILER_BOTTOM, 
-    GREY);
-    addTrailerHitch(trailer);
-
-    addWheel(trailer, 
-        - X_TRAILER_BOTTOM/2 - WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_MIDDLE_WHEEL_POSITION
-    );
-    addWheel(trailer, 
-        X_TRAILER_BOTTOM/2 + WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_MIDDLE_WHEEL_POSITION
-    );
-    addWheel(trailer, 
-        - X_TRAILER_BOTTOM/2 - WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_BACK_WHEEL_POSITION
-    );
-    addWheel(trailer, 
-        X_TRAILER_BOTTOM/2 + WHEEL_HEIGHT/2, WHEEL_RADIUS, TRAILER_BACK_WHEEL_POSITION
-    );
-
-    // Vectors for AABB Box
-    trailer.min = new THREE.Vector3();
-    trailer.max = new THREE.Vector3();
-
-    trailer.position.set(x, y, z);
-    scene.add(trailer);
-}
-
 //////////////////////
 /* CHECK COLLISIONS */
 //////////////////////
@@ -620,23 +306,6 @@ function checkCollision(obj1, obj2){
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
-
-function moveTrailerToConnection() {
-    'use strict';
-
-    var trailerHitchPosition = new THREE.Vector3();
-    trailerHitch.getWorldPosition(trailerHitchPosition);
-
-    movementVector.addScaledVector(trailerHitchPosition, -1);
-    movementVector.add(TRAILER_CONNECTION);
-
-    let THRESHOLD = 0.05;
-    if (trailerHitchPosition.distanceTo(TRAILER_CONNECTION) >= THRESHOLD) {
-        movementVector.multiplyScalar(TRAILER_CONNECTION_SPEED)
-    }
-
-    trailer.position.add(movementVector);
-}
 
 function updateAABBBox(obj, x_min, y_min, z_min, x_max, y_max, z_max) {
     'use strict';
