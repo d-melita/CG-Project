@@ -117,7 +117,7 @@ function createScene() {
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
-    addHouse(0, 4, 0);
+    //addHouse(0, 4, 0);
     addOVNI(0, 20, 0);
 }
 
@@ -201,22 +201,65 @@ function addElipse(obj, x, y, z, radius, color, xScale, yScale, zScale) {
     materials.push(material);
 }
 
+function addCockpit(obj, x, y, z) {
+    'use strict';
+
+    var cockpit = new THREE.Object3D();
+    addElipse(cockpit, 0, 0, 0, 2, WHITE, 1, 1, 1); // cockpit
+
+    cockpit.position.set(x, y, z);
+    obj.add(cockpit);
+
+}
+
+function addBody(obj, x, y, z) {
+    'use strict';
+
+    var body = new THREE.Object3D();
+    addElipse(body, 0, 0, 0, 1, BLACK, 6, 1.5, 6); // main body
+
+    body.position.set(x, y, z);
+    obj.add(body);
+
+}
+
+function addBase(obj, x, y, z) {
+    'use strict';
+
+    var base = new THREE.Object3D();
+
+    addCylinder(base, 0, 0, 0, 2, 2, '', 0, WHITE);
+    base.position.set(x, y, z);
+    obj.add(base);
+}
+
+function addLights(obj, x, y, z) {
+    'use strict';
+
+    var rotation = Math.PI/4
+
+    for (var i = 0; i < 8; i++){
+        var light = new THREE.Object3D();
+
+        addElipse(light, 4, 0, 0, 1, BLUE, 1, 1, 1);
+
+        light.rotateY(rotation*i);
+        light.position.set(x, y, z);
+        obj.add(light);
+    }
+}
+
 function addOVNI(x, y, z) {
     'use strict';
 
     ovni = new THREE.Object3D();
-    var body = new THREE.Object3D();
-    var cockpit = new THREE.Object3D();
 
-    addCockpit(ovni);
-    addElipse(cockpit, 0, 2, 0, 2, WHITE, 1, 1, 1); // cockpit
-    addElipse(body, 0, 0, 0, 1, BLACK, 6, 1.5, 6); // main body
+    addCockpit(ovni, 0, 1.5, 0);
+    addBody(ovni, 0, 0, 0);
+    addBase(ovni, 0, -1.5, 0);
+    addLights(ovni, 0, 2-1-1.5, 0);
 
-    ovni.add(cockpit);
-
-    ovni.add(body);
-
-    ovni.position.set(x, y, z);
+    ovni.position.set(x, y + 3.5, z);
     scene.add(ovni);
 }
 
