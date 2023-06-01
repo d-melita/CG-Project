@@ -13,10 +13,10 @@
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, scene, renderer;
+var camera, scene, renderer, controls;
 
 var axesHelper;
-var house;
+var house, ovni;
 var trailer, trailerHitch;
 var transformer, inferiorBody, leftArm, rightArm, head, feet;
 
@@ -78,7 +78,7 @@ function init() {
 
     createScene();
 
-    camera = getPerspectiveCamera();
+    camera = createCamera();
     render();
 
     window.addEventListener("resize", onResize);
@@ -95,64 +95,6 @@ function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED * elapsedTime; }
 function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
 function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
-function onQKeyDown() { // Q key
-    let rotate = Math.min(FEET_ROTATION_SPEED * elapsedTime, FEET_MAX_ROTATION - feetRotation);
-    feetRotation += rotate;
-    feet.rotateX(rotate); 
-}
-function onAKeyDown() { // A key
-    let rotate = Math.min(FEET_ROTATION_SPEED * elapsedTime, feetRotation - FEET_MIN_ROTATION);
-    feetRotation -= rotate;
-    feet.rotateX(-rotate);
-}
-function onWKeyDown() { // W key
-    let rotate = Math.min(LEGS_ROTATION_SPEED * elapsedTime, LEGS_MAX_ROTATION - legsRotation);
-    legsRotation += rotate;
-    inferiorBody.rotateX(rotate); 
-}
-function onSKeyDown() { // S key
-    let rotate = Math.min(LEGS_ROTATION_SPEED * elapsedTime, legsRotation - LEGS_MIN_ROTATION);
-    legsRotation -= rotate;
-    inferiorBody.rotateX(-rotate);
-}
-function onEKeyDown() { // E key
-    let shift = Math.min(ARMS_SHIFT_SPEED * elapsedTime, ARMS_MAX_SHIFT - armsShift);
-    armsShift += shift;
-    leftArm.position.x += shift;
-    rightArm.position.x -= shift;
-}
-function onDKeyDown() { // D key
-    let shift = Math.min(ARMS_SHIFT_SPEED * elapsedTime, armsShift - ARMS_MIN_SHIFT);
-    armsShift -= shift;
-    leftArm.position.x -= shift;
-    rightArm.position.x += shift;
-}
-function onRKeyDown() { // R key
-    let rotate = Math.min(HEAD_ROTATION_SPEED * elapsedTime, HEAD_MAX_ROTATION - headRotation);
-    headRotation += rotate;
-    head.rotateX(rotate); 
-}
-function onFKeyDown() { // F key
-    let rotate = Math.min(HEAD_ROTATION_SPEED * elapsedTime, headRotation - HEAD_MIN_ROTATION);
-    headRotation -= rotate;
-    head.rotateX(-rotate);
-}
-
-function on1KeyDown() { // 1 key
-    switchCamera(getTopCamera());
-}
-function on2KeyDown() { // 2 key
-    switchCamera(getSideCamera());
-}
-function on3KeyDown() { // 3 key
-    switchCamera(getFrontCamera());
-}
-function on4KeyDown() { // 4 key
-    switchCamera(getIsometricCamera());
-}
-function on5KeyDown() { // 5 key
-    switchCamera(getPerspectiveCamera());
-}
 function on6KeyDown() { // 6 key
     for (var i = 0; i < materials.length; i++) {
         materials[i].wireframe = !materials[i].wireframe;
@@ -216,37 +158,23 @@ function createScene() {
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
     addHouse(0, 4, 0);
+    addOVNI(0, 20, 0);
 }
 
 //////////////////////
 /* CREATE CAMERA(S) */
 //////////////////////
 
-function getOrthographicCamera(pos_x, pos_y, pos_z) {
-    const aspect = window.innerWidth / window.innerHeight;
-    const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
-    camera.position.set(pos_x, pos_y, pos_z);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-    return camera;
-  }
-  
-  function getTopCamera() {
-    return getOrthographicCamera(0, 30, 0);
-  }
-  
-  function getSideCamera() {
-    return getOrthographicCamera(30, 0, 0);
-  }
-  
-  function getFrontCamera() {
-    return getOrthographicCamera(0, 0, 30);
-  }
-  
-  function getIsometricCamera() {
-    return getOrthographicCamera(30, 30, 30);
-  }
-  
-  function getPerspectiveCamera() {
+function createCamera() {
+    'use strict';
+    var scene_camera = getPerspectiveCamera();
+
+    controls = new THREE.OrbitControls(scene_camera, renderer.domElement);
+    controls.update();
+    return scene_camera;
+}
+
+function getPerspectiveCamera() {
     const camera = new THREE.PerspectiveCamera(
       75, window.innerWidth / window.innerHeight, 0.1, 100
     );
@@ -254,11 +182,7 @@ function getOrthographicCamera(pos_x, pos_y, pos_z) {
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     return camera;
   }
-  
-  function switchCamera(new_camera) {
-    camera = new_camera;
-  }
-  
+
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
@@ -304,16 +228,36 @@ function addBox(obj, x, y, z, length, height, width, color) {
     materials.push(material);
 }
 
-function addCone(obj, x, y, z, baseRadius, height, segments, faces, color) {
+function addElipse(obj, x, y, z, radius, color, xScale, yScale, zScale) {
     'use strict';
 
-    var geometry = new THREE.ConeGeometry(baseRadius, height, segments, faces);
+    var geometry = new THREE.SphereGeometry(radius, 32, 32);
     var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
-    var cone = new THREE.Mesh(geometry, material);
+    var sphere = new THREE.Mesh(geometry, material);
 
-    cone.position.set(x, y, z);
-    obj.add(cone);
+    sphere.position.set(x, y, z);
+    obj.scale.set(xScale, yScale, zScale);
+    obj.add(sphere);
     materials.push(material);
+}
+
+function addOVNI(x, y, z) {
+    'use strict';
+
+    ovni = new THREE.Object3D();
+    var body = new THREE.Object3D();
+    var cockpit = new THREE.Object3D();
+
+    addCockpit(ovni);
+    addElipse(cockpit, 0, 2, 0, 2, WHITE, 1, 1, 1); // cockpit
+    addElipse(body, 0, 0, 0, 1, BLACK, 6, 1.5, 6); // main body
+
+    ovni.add(cockpit);
+
+    ovni.add(body);
+
+    ovni.position.set(x, y, z);
+    scene.add(ovni);
 }
 
 function addHouse(x, y, z) {
@@ -328,9 +272,18 @@ function addHouse(x, y, z) {
     addBox(house, 3, 0, -6, 0.001, 3, 2, BLUE); // window 4
     addBox(house, -1.5, 0, 8, 1, 3, 0.001, BLUE); // window 5
     addBox(house, 1.5, 0, 8, 1, 3, 0.001, BLUE); // window 6
-    addCone(house, 0, 5, 0, 3, 2, 4, 4, RED); // roof
+    addRoof(house);
     house.position.set(x, y, z);
     scene.add(house);
+}
+
+function addRoof(obj) {
+    'use strict';
+
+    var roof = new THREE.Object3D();
+    addBox(roof, 0, 5, 0, 6, 2, 16, RED);
+    //roof.rotateZ(Math.PI / 4); 
+    obj.add(roof);
 }
 
 //////////////////////
