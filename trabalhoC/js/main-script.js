@@ -16,19 +16,20 @@
 var camera, scene, renderer, controls;
 
 var axesHelper;
-var house, ovni;
+var house, ovni, moon, tree;
 
 var materials = [];
 
-const frustumSize = 50;
-
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
+const BROWN = 0x9c4f0c; GREEN = 0x07820d;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
 
 var clock = new THREE.Clock();
 var elapsedTime;
+
+var conversion_keys = {}, non_conversion_keys = {};
 
 ////////////////////////////////
 /* INITIALIZE ANIMATION CYCLE */
@@ -75,12 +76,9 @@ function update(){
     for (const [key, val] of Object.entries(non_conversion_keys))
         val.call();
 
-    //handleCollisions();
-    //if (trailerState == 'attaching') return;
-
     for (const [key, val] of Object.entries(conversion_keys))
         val.call();
-    //trailer.position.add(movementVector);
+    
 }
 
 /////////////
@@ -117,8 +115,10 @@ function createScene() {
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
-    //addHouse(0, 4, 0);
+    addHouse(0, 4, 0);
     addOVNI(0, 20, 0);
+    addMoon(0, 35, 15);
+    addTree(0, 1.5, 20);
 }
 
 //////////////////////
@@ -138,7 +138,7 @@ function getPerspectiveCamera() {
     const camera = new THREE.PerspectiveCamera(
       75, window.innerWidth / window.innerHeight, 0.1, 100
     );
-    camera.position.set(30, 30, 30);
+    camera.position.set(40, 40, 40);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     return camera;
   }
@@ -287,6 +287,48 @@ function addRoof(obj) {
     addBox(roof, 0, 5, 0, 6, 2, 16, RED);
     //roof.rotateZ(Math.PI / 4); 
     obj.add(roof);
+}
+
+function addMoon(x, y, z) {
+    'use strict';
+
+    moon = new THREE.Object3D();
+    addElipse(moon, 0, 0, 0, 4, WHITE, 1, 1, 1);
+    moon.position.set(x, y, z);
+    scene.add(moon);
+}
+
+function addLeaves(obj, x, y, z) {
+    'use strict';
+
+    var leaves = new THREE.Object3D();
+    addElipse(leaves, 0, 0, 0, 1, GREEN, 2, 1, 4);
+
+    leaves.position.set(x, y, z);
+    obj.add(leaves);
+}
+
+function addTrunks(obj, x, y, z) {
+    'use strict';
+
+    var trunk = new THREE.Object3D();
+    addCylinder(trunk, 0, 0, 0, 1, 3, '', 0, BROWN); // base trunk
+    addCylinder(trunk, 0, 3.2, 1.3, 1, 5.2, 'x', Math.PI/4, BROWN);
+    addCylinder(trunk, 0, 4.2, -2, 1, 7, 'x', -Math.PI/4, BROWN);
+
+    trunk.position.set(x, y, z);
+    obj.add(trunk);
+}
+
+function addTree(x, y, z) {
+    'use strict';
+
+    tree = new THREE.Object3D();
+    addTrunks(tree, 0, 0, 0);
+    addLeaves(tree, 0, 5, 3);
+    addLeaves(tree, 0, 7, -4);
+    tree.position.set(x, y, z);
+    scene.add(tree);
 }
 
 //////////////////////
