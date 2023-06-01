@@ -13,7 +13,7 @@
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, scene, renderer, controls;
+var camera, scene, renderer, controls, perspective_camera;
 
 var axesHelper;
 var house, ovni, moon, tree;
@@ -21,7 +21,7 @@ var house, ovni, moon, tree;
 var materials = [];
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
-const BROWN = 0x9c4f0c; GREEN = 0x07820d;
+const BROWN = 0x9c4f0c; GREEN = 0x07820d; ORANGE = 0xfc5203;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -41,6 +41,8 @@ function init() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    document.body.appendChild( VRButton.createButton( renderer ) );
+    renderer.xr.enabled = true;
 
     createScene();
 
@@ -55,6 +57,10 @@ function init() {
 ////////////
 /* UPDATE */
 ////////////
+
+function on1KeyDown() { // 1 key
+    camera = perspective_camera;
+}
 
 function on6KeyDown() { // 6 key
     for (var i = 0; i < materials.length; i++) {
@@ -115,10 +121,10 @@ function createScene() {
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
-    addHouse(0, 4, 0);
+    addHouse();
     addOVNI(0, 20, 0);
     addMoon(0, 35, 15);
-    addTree(0, 1.5, 20);
+    addTree(0, 1.5, 30);
 }
 
 //////////////////////
@@ -127,11 +133,12 @@ function createScene() {
 
 function createCamera() {
     'use strict';
-    var scene_camera = getPerspectiveCamera();
+    perspective_camera = getPerspectiveCamera();
 
-    controls = new THREE.OrbitControls(scene_camera, renderer.domElement);
+    controls = new THREE.OrbitControls(perspective_camera, renderer.domElement);
     controls.update();
-    return scene_camera;
+
+    return perspective_camera;
 }
 
 function getPerspectiveCamera() {
@@ -263,20 +270,119 @@ function addOVNI(x, y, z) {
     scene.add(ovni);
 }
 
-function addHouse(x, y, z) {
-    'use strict';
 
+function addGeometry(obj, x, y, z, vertices, indexs, color) {
+    'use strict';
+    
+    var geometry = new THREE.Object3D();
+    var bufferTexture = new THREE.BufferGeometry();
+    
+    bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    
+
+    bufferTexture.setIndex(indexs);
+    bufferTexture.computeVertexNormals();
+    let material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+    let mesh = new THREE.Mesh(bufferTexture, material);
+    mesh.position.set(x, y, z);
+    materials.push(material);
+    geometry.add(mesh);
+    obj.add(geometry);
+}
+
+function addWindowsAndDoor(obj) {
+    'use strict';
+    var vertices = [];
+
+    var doorVertices = [
+        6, 0, 4,
+        6, 0, 6,
+        6, 4, 4,
+        6, 4, 6,
+    ];
+    vertices.push(...doorVertices);
+
+    var window1Vertices = [
+        6, 3, 1,
+        6, 3, 3,
+        6, 6, 1,
+        6, 6, 3, 
+    ];
+    vertices.push(...window1Vertices);
+
+    var window2Vertices = [
+        6, 3, 7,
+        6, 3, 9,
+        6, 6, 7,
+        6, 6, 9,
+    ];
+    vertices.push(...window2Vertices);
+
+    var window3Vertices = [
+        6, 3, 10,
+        6, 3, 12,
+        6, 6, 10,
+        6, 6, 12,
+    ];
+    vertices.push(...window3Vertices);
+
+    var window4Vertices = [
+        6, 3, 13,
+        6, 3, 15,
+        6, 6, 13,
+        6, 6, 15,
+    ];
+    vertices.push(...window4Vertices);
+
+    var indexs = [
+        0, 1, 2, 1, 3, 2,
+    ];
+
+    for (var i = 0; i < 5; i++) {
+        addGeometry(obj, 0, 0, 0, vertices.slice(i*12, i*12 + 12), indexs, BLUE);
+    }   
+}
+
+function addHouse() {
+    'use strict';
+    // create house using polygon mesh
     house = new THREE.Object3D();
-    addBox(house, 0, 0, 0, 6, 8, 16, WHITE); // main body
-    addBox(house, 3, -2, -3, 0.001, 4, 2, BLACK); // door
-    addBox(house, 3, 0, 6, 0.001, 3, 2, BLUE); // window 1
-    addBox(house, 3, 0, 3, 0.001, 3, 2, BLUE); // window 2
-    addBox(house, 3, 0, 0, 0.001, 3, 2, BLUE); // window 3
-    addBox(house, 3, 0, -6, 0.001, 3, 2, BLUE); // window 4
-    addBox(house, -1.5, 0, 8, 1, 3, 0.001, BLUE); // window 5
-    addBox(house, 1.5, 0, 8, 1, 3, 0.001, BLUE); // window 6
-    addRoof(house);
-    house.position.set(x, y, z);
+    var verticesWalls = [
+        0, 0, 0,
+        0, 0, 16,
+        6, 0, 0,
+        6, 0, 16,
+        0, 8, 0,
+        0, 8, 16,
+        6, 8, 0,
+        6, 8, 16,
+    ];
+    const indexsWalls = [
+        0, 1, 2, 1, 3, 2,
+        0, 2, 4, 2, 6, 4,
+        2, 3, 6, 3, 7, 6,
+        4, 6, 5, 6, 7, 5,
+        0, 4, 1, 4, 5, 1,
+        1, 5, 3, 5, 7, 3,
+        3, 7, 2, 7, 6, 2
+    ];
+
+    addGeometry(house, 0, 0, 0, verticesWalls, indexsWalls, WHITE);
+    var verticesRoof = [
+        0, 8, 0,
+        0, 8, 16,
+        6, 8, 0,
+        6, 8, 16,
+        3, 10, 8
+    ];
+    const indexsRoof = [
+        0, 1, 4,
+        1, 3, 4,
+        3, 2, 4,
+        2, 0, 4,
+    ];
+    addGeometry(house, 0, 0, 0, verticesRoof, indexsRoof, ORANGE);
+    addWindowsAndDoor(house);
     scene.add(house);
 }
 
