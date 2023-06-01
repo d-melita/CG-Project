@@ -18,6 +18,9 @@ var camera, scene, renderer, controls, perspective_camera;
 var axesHelper;
 var house, ovni, moon, tree;
 
+var spotLight;
+var pointLights = [];
+
 var materials = [];
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
@@ -58,6 +61,11 @@ function init() {
 /* UPDATE */
 ////////////
 
+function onLeftKeyDown() { movementVector.x -= MOVEMENT_SPEED * elapsedTime; }
+function onRightKeyDown() { movementVector.x += MOVEMENT_SPEED * elapsedTime; }
+function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
+function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
+
 function on1KeyDown() { // 1 key
     camera = perspective_camera;
 }
@@ -74,17 +82,32 @@ function onHKeyDown() { // H key
     delete non_conversion_keys[72];
 }
 
+function onPKeyDown() { // P key - turn on/off point light
+    for (var i = 0; i < pointLights.length; i++) {
+        pointLights[i].visible = !pointLights[i].visible;
+    }
+    delete non_conversion_keys[80];
+}
+
+function onSKeyDown() { // S key - turn on/off spot light
+    spotLight.visible = !spotLight.visible;
+    delete non_conversion_keys[83];
+}
+
 function update(){
     'use strict';
 
-    //movementVector.set(0, 0, 0);
+    movementVector.set(0, 0, 0);
 
     for (const [key, val] of Object.entries(non_conversion_keys))
         val.call();
 
     for (const [key, val] of Object.entries(conversion_keys))
         val.call();
-    
+
+    ovni.rotateY(0.05);
+    ovni.position.add(movementVector);
+    spotLight.target.position.set(ovni.position.x, 0, ovni.position.z);
 }
 
 /////////////
@@ -122,17 +145,40 @@ function createScene() {
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
     createSky();
+    createPlane();
     addHouse();
     addOVNI(0, 20, 0);
     addMoon(0, 35, 15);
     addTree(0, 1.5, 30);
 }
 
+function createPlane() {
+    'use strict';
+
+    const loader = new THREE.TextureLoader();
+    const displacementMap = loader.load('./textures/heightmap.png');
+
+    const material = new THREE.MeshStandardMaterial({
+        color: 0x808080,
+        displacementMap: displacementMap,
+        displacementScale: 0.5,
+    });
+
+    const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
+
+    const plane = new THREE.Mesh(geometry, material);
+
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.y = -0.5;
+    
+    scene.add(plane);
+}
+
 function createSky() {
     const geometry = new THREE.BufferGeometry();
   
     const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
-      (n) => n  * 20
+      (n) => n  * 100
     );
   
     const indices = [0, 1, 2, 2, 3, 0];
@@ -189,6 +235,24 @@ function getPerspectiveCamera() {
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
+
+function createLight(obj, x, y, z) {
+    'use strict';
+
+    // add spot light to ovni
+    spotLight = new THREE.SpotLight(0xffffff, 1, 100, 0.5, 1);
+    spotLight.position.set(x, y, z);
+    obj.add(spotLight);
+}
+
+function createPontualLight(obj, x, y, z) {
+    'use strict';
+
+    const light = new THREE.PointLight(0xffffff, 1, 30);
+    light.position.set(x, y, z);
+    obj.add(light);
+    pointLights.push(light);
+}
 
 ////////////////////////
 /* CREATE OBJECT3D(S) */
@@ -273,6 +337,7 @@ function addBase(obj, x, y, z) {
 
     addCylinder(base, 0, 0, 0, 2, 2, '', 0, WHITE);
     base.position.set(x, y, z);
+    createLight(base, 0, 0, 0);
     obj.add(base);
 }
 
@@ -288,6 +353,7 @@ function addLights(obj, x, y, z) {
 
         light.rotateY(rotation*i);
         light.position.set(x, y, z);
+        createPontualLight(light, 0, 0, 0);
         obj.add(light);
     }
 }
@@ -516,6 +582,28 @@ function onKeyDown(e) {
 
         case 72: // H
             non_conversion_keys[72] = onHKeyDown;
+            break;
+
+        case 80: // P
+            non_conversion_keys[80] = onPKeyDown;
+            break;
+        
+        case 83: // S
+            non_conversion_keys[83] = onSKeyDown;
+            break;
+
+        // case arrow conversion_keys: move trailer
+        case 37: // left arrow
+            conversion_keys[37] = onLeftKeyDown;
+            break;
+        case 38: // up arrow
+            conversion_keys[38] = onUpKeyDown;
+            break;
+        case 39: // right arrow
+            conversion_keys[39] = onRightKeyDown;
+            break;
+        case 40: // down arrow
+            conversion_keys[40] = onDownKeyDown;
             break;
 
         default:
