@@ -16,7 +16,7 @@
 var camera, scene, renderer, controls, perspective_camera;
 
 var axesHelper;
-var house, ovni, moon, tree;
+var house, ovni, moon, tree, skyDome;
 
 var spotLight;
 var pointLights = [];
@@ -146,10 +146,11 @@ function createScene() {
     scene.background = new THREE.Color(BACKGROUND_COLOR);
     createSky();
     createPlane();
-    addHouse();
-    addOVNI(0, 20, 0);
+    //createSkyDome();
+    addHouse(0, 4, 0);
+    addOVNI(0, 30, 0);
     addMoon(0, 35, 15);
-    addTree(0, 1.5, 30);
+    addTree(0, 5.5, 30);
 }
 
 function createPlane() {
@@ -159,9 +160,11 @@ function createPlane() {
     const displacementMap = loader.load('./textures/heightmap.png');
 
     const material = new THREE.MeshStandardMaterial({
-        color: 0x808080,
+        color: GREEN,
         displacementMap: displacementMap,
-        displacementScale: 0.5,
+        displacementScale: 20,
+        side: THREE.DoubleSide
+        // map que dá a textura
     });
 
     const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
@@ -178,7 +181,7 @@ function createSky() {
     const geometry = new THREE.BufferGeometry();
   
     const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
-      (n) => n  * 100
+      (n) => n  * 20
     );
   
     const indices = [0, 1, 2, 2, 3, 0];
@@ -204,7 +207,7 @@ function createSky() {
     });
   
     const sky = new THREE.Mesh(geometry, material);
-    sky.position.set(0, 0, 0);
+    sky.position.set(0, -10, 0);
   
     scene.add(sky);
   }
@@ -236,6 +239,13 @@ function getPerspectiveCamera() {
 /* CREATE LIGHT(S) */
 /////////////////////
 
+function createDirectionalLight(obj) {
+    'use strict';
+
+    const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    obj.add(directionalLight);
+}
+
 function createLight(obj, x, y, z) {
     'use strict';
 
@@ -257,6 +267,13 @@ function createPontualLight(obj, x, y, z) {
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
+
+function createSkyDome() {
+    'use strict';
+
+    skyDome = new THREE.Object3D();
+    addElipse()
+}
 
 function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degree, color) {
     'use strict';
@@ -280,18 +297,6 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
 
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
-    materials.push(material);
-}
-
-function addBox(obj, x, y, z, length, height, width, color) {
-    'use strict';
-
-    var geometry = new THREE.BoxGeometry(length, height, width);
-    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
-    var box = new THREE.Mesh(geometry, material);
-
-    box.position.set(x, y, z);
-    obj.add(box);
     materials.push(material);
 }
 
@@ -397,60 +402,7 @@ function addGeometry(obj, x, y, z, vertices, indexs, color) {
     obj.add(geometry);
 }
 
-function addWindowsAndDoor(obj) {
-    'use strict';
-    var vertices = [];
-
-    var doorVertices = [
-        6, 0, 4,
-        6, 0, 6,
-        6, 4, 4,
-        6, 4, 6,
-    ];
-    vertices.push(...doorVertices);
-
-    var window1Vertices = [
-        6, 3, 1,
-        6, 3, 3,
-        6, 6, 1,
-        6, 6, 3, 
-    ];
-    vertices.push(...window1Vertices);
-
-    var window2Vertices = [
-        6, 3, 7,
-        6, 3, 9,
-        6, 6, 7,
-        6, 6, 9,
-    ];
-    vertices.push(...window2Vertices);
-
-    var window3Vertices = [
-        6, 3, 10,
-        6, 3, 12,
-        6, 6, 10,
-        6, 6, 12,
-    ];
-    vertices.push(...window3Vertices);
-
-    var window4Vertices = [
-        6, 3, 13,
-        6, 3, 15,
-        6, 6, 13,
-        6, 6, 15,
-    ];
-    vertices.push(...window4Vertices);
-
-    var indexs = [
-        0, 1, 2, 1, 3, 2,
-    ];
-
-    for (var i = 0; i < 5; i++) {
-        addGeometry(obj, 0, 0, 0, vertices.slice(i*12, i*12 + 12), indexs, BLUE);
-    }   
-}
-
-function addHouse() {
+function addHouse(x, y, z) {
     'use strict';
     // create house using polygon mesh
     house = new THREE.Object3D();
@@ -463,18 +415,47 @@ function addHouse() {
         0, 8, 16,
         6, 8, 0,
         6, 8, 16,
+        // door
+        6, 0, 4,
+        6, 0, 6,
+        6, 4, 4,
+        6, 4, 6,
+        // window 1
+        6, 3, 7,
+        6, 3, 9,
+        6, 6, 7,
+        6, 6, 9,
+        // window 2
+        6, 3, 13,
+        6, 3, 15,
+        6, 6, 13,
+        6, 6, 15,
     ];
     const indexsWalls = [
         0, 1, 2, 1, 3, 2,
         0, 2, 4, 2, 6, 4,
-        2, 3, 6, 3, 7, 6,
         4, 6, 5, 6, 7, 5,
         0, 4, 1, 4, 5, 1,
         1, 5, 3, 5, 7, 3,
-        3, 7, 2, 7, 6, 2
+        6, 10, 2, 10, 8, 2,
+        11, 10, 14, 11, 14, 12,
+        9, 11, 12, 14, 10, 6,
+        15, 14, 6, 7, 15, 6,
+        18, 15, 7, 7, 19, 18,
+        7, 3, 19, 3, 17, 19,
+        3, 16, 17, 3, 9, 16,
+        9, 13, 16, 9, 12, 13,
+        16, 13, 15, 16, 15, 18
     ];
 
+    const doorWindowsIndexs = [
+        9, 8, 10, 9, 10, 11,
+        13, 12, 14, 13, 14, 15,
+        17, 16, 18, 17, 18, 19
+    ]
+
     addGeometry(house, 0, 0, 0, verticesWalls, indexsWalls, WHITE);
+    addGeometry(house, 0, 0, 0, verticesWalls, doorWindowsIndexs, BLUE);
     var verticesRoof = [
         0, 8, 0,
         0, 8, 16,
@@ -489,17 +470,8 @@ function addHouse() {
         2, 0, 4,
     ];
     addGeometry(house, 0, 0, 0, verticesRoof, indexsRoof, ORANGE);
-    addWindowsAndDoor(house);
+    house.position.set(x, y, z);
     scene.add(house);
-}
-
-function addRoof(obj) {
-    'use strict';
-
-    var roof = new THREE.Object3D();
-    addBox(roof, 0, 5, 0, 6, 2, 16, RED);
-    //roof.rotateZ(Math.PI / 4); 
-    obj.add(roof);
 }
 
 function addMoon(x, y, z) {
@@ -508,6 +480,7 @@ function addMoon(x, y, z) {
     moon = new THREE.Object3D();
     addElipse(moon, 0, 0, 0, 4, WHITE, 1, 1, 1);
     moon.position.set(x, y, z);
+    createDirectionalLight(moon);
     scene.add(moon);
 }
 
