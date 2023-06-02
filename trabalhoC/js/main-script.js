@@ -337,7 +337,6 @@ function addBase(obj, x, y, z) {
 
     addCylinder(base, 0, 0, 0, 2, 2, '', 0, WHITE);
     base.position.set(x, y, z);
-    createLight(base, 0, 0, 0);
     obj.add(base);
 }
 
@@ -369,6 +368,12 @@ function addOVNI(x, y, z) {
     addLights(ovni, 0, 2-1-1.5, 0);
 
     ovni.position.set(x, y + 3.5, z);
+    createLight(ovni, 0, 0, 0);
+    var spotLightTarget = new THREE.Object3D();
+    spotLightTarget.position.set(ovni.position.x, 0, ovni.position.z);
+    spotLight.target = spotLightTarget;
+    ovni.add(spotLightTarget);
+    scene.add(spotLightTarget);
     scene.add(ovni);
 }
 
