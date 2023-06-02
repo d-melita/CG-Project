@@ -25,7 +25,7 @@ var pointLights = [];
 var materials = [];
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = new THREE.Color(0x0000ff), RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
-const BROWN = 0x9c4f0c, GREEN = 0x07820d, ORANGE = 0xfc5203, PURPLE = new THREE.Color(0xa32cc4), YELLOW = 0xf5e105;
+const BROWN = 0x9c4f0c, GREEN = new THREE.Color(0x07820d), ORANGE = 0xfc5203, PURPLE = new THREE.Color(0xa32cc4), YELLOW = 0xf5e105;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -116,15 +116,16 @@ function update(){
 
 function render() {
     'use strict';
-    //renderer.setRenderTarget(grassTexture);
-    //renderer.render(grassScene, grassCamera);
-    //renderer.setRenderTarget(null);
+    renderer.setRenderTarget(grassTexture);
+    renderer.render(grassScene, grassCamera);
+    renderer.setRenderTarget(null);
 
     renderer.setRenderTarget(skyTexture);
     renderer.render(skyScene, skyCamera);
     renderer.setRenderTarget(null);
 
     //renderer.render(skyScene, skyCamera);
+    //renderer.render(grassScene, grassCamera);
     renderer.render(scene, camera);
 }
 
@@ -153,10 +154,10 @@ function createScene() {
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
     createSky();
-    //generatePlane();
+    generatePlane();
     createPlane();
     createSkyDome(0, 0, 0);
-    addHouse(0, 4, 0);
+    addHouse(0, 4.5, 0);
     addOVNI(0, 30, 0);
     addMoon(0, 35, 15);
     addTree(0, 5.5, 30);
@@ -169,11 +170,10 @@ function createPlane() {
     const displacementMap = loader.load('./textures/heightmap.png');
 
     const material = new THREE.MeshStandardMaterial({
-        color: GREEN,
         displacementMap: displacementMap,
         displacementScale: 20,
         side: THREE.DoubleSide,
-        //map: grassTexture.texture
+        map: grassTexture.texture
     });
 
     const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
@@ -194,10 +194,16 @@ function generatePlane() {
     const geometry = new THREE.BufferGeometry();
   
     const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
-      (n) => n  * 20
+      (n) => n  * 200
     );
   
     const indices = [0, 1, 2, 2, 3, 0];
+  
+    const colors = [GREEN, GREEN, GREEN, GREEN].flatMap((color) => [
+      color.r,
+      color.g,
+      color.b,
+    ]);
   
     geometry.setIndex(indices);
     geometry.setAttribute(
@@ -205,18 +211,19 @@ function generatePlane() {
       new THREE.Float32BufferAttribute(positions, 3)
     );
     geometry.computeVertexNormals();
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   
     const material = new THREE.MeshBasicMaterial({
-      color: GREEN
+      vertexColors: true,
     });
   
     const grass = new THREE.Mesh(geometry, material);
-    grass.position.set(0, 0, 0);
-    skyScene.add(grass);
+    grass.position.set(-100, 0, 0);
+    grassScene.add(grass);
 
     grassCamera = new THREE.PerspectiveCamera(75, grassTexture.width / grassTexture.height, 0.1, 1000000);
     grassCamera.position.set(10, 10, 10);
-    grassCamera.lookAt(new THREE.Vector3(0, 0, 0));
+    grassCamera.lookAt(new THREE.Vector3(10, 0, 10));
     grassScene.add(grassCamera);
     addFlowers(grass);
 }
@@ -226,7 +233,7 @@ function addFlowers(grass) {
 
     var colors = [WHITE, ORANGE, RED, BLUE];
 
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < 100; i++) {
         var flower = new THREE.SphereGeometry(0.1, 32, 32);
         var flowerMaterial = new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random() * colors.length)]});
         var flowerMesh = new THREE.Mesh(flower, flowerMaterial);
