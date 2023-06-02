@@ -13,7 +13,8 @@
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, scene, renderer, controls, perspective_camera;
+var camera, scene, renderer, controls, perspective_camera, skyScene, skyTexture, grassScene, grassTexture;
+var skyCamera, grassCamera;
 
 var axesHelper;
 var house, ovni, moon, tree, skyDome;
@@ -23,8 +24,8 @@ var pointLights = [];
 
 var materials = [];
 
-const WHITE = 0xffffff, BLACK = 0x000000, BLUE = 0x004bc4, RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
-const BROWN = 0x9c4f0c; GREEN = 0x07820d; ORANGE = 0xfc5203;
+const WHITE = 0xffffff, BLACK = 0x000000, BLUE = new THREE.Color(0x0000ff), RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
+const BROWN = 0x9c4f0c, GREEN = 0x07820d, ORANGE = 0xfc5203, PURPLE = new THREE.Color(0xa32cc4), YELLOW = 0xf5e105;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -48,8 +49,7 @@ function init() {
     renderer.xr.enabled = true;
 
     createScene();
-
-    camera = createCamera();
+    createCamera();
     render();
 
     window.addEventListener("resize", onResize);
@@ -116,7 +116,15 @@ function update(){
 
 function render() {
     'use strict';
+    //renderer.setRenderTarget(grassTexture);
+    //renderer.render(grassScene, grassCamera);
+    //renderer.setRenderTarget(null);
 
+    renderer.setRenderTarget(skyTexture);
+    renderer.render(skyScene, skyCamera);
+    renderer.setRenderTarget(null);
+
+    //renderer.render(skyScene, skyCamera);
     renderer.render(scene, camera);
 }
 
@@ -145,8 +153,9 @@ function createScene() {
     scene.add(axesHelper);
     scene.background = new THREE.Color(BACKGROUND_COLOR);
     createSky();
+    //generatePlane();
     createPlane();
-    //createSkyDome();
+    createSkyDome(0, 0, 0);
     addHouse(0, 4, 0);
     addOVNI(0, 30, 0);
     addMoon(0, 35, 15);
@@ -163,8 +172,8 @@ function createPlane() {
         color: GREEN,
         displacementMap: displacementMap,
         displacementScale: 20,
-        side: THREE.DoubleSide
-        // map que dá a textura
+        side: THREE.DoubleSide,
+        //map: grassTexture.texture
     });
 
     const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
@@ -172,12 +181,16 @@ function createPlane() {
     const plane = new THREE.Mesh(geometry, material);
 
     plane.rotation.x = -Math.PI / 2;
-    plane.position.y = -0.5;
     
     scene.add(plane);
 }
 
-function createSky() {
+function generatePlane() {
+
+    grassScene = new THREE.Scene();
+
+    grassTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
+
     const geometry = new THREE.BufferGeometry();
   
     const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
@@ -186,9 +199,60 @@ function createSky() {
   
     const indices = [0, 1, 2, 2, 3, 0];
   
-    const blue = new THREE.Color(0x0000ff);
-    const purple = new THREE.Color(0xa32cc4);
-    const colors = [purple, blue, blue, purple].flatMap((color) => [
+    geometry.setIndex(indices);
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3)
+    );
+    geometry.computeVertexNormals();
+  
+    const material = new THREE.MeshBasicMaterial({
+      color: GREEN
+    });
+  
+    const grass = new THREE.Mesh(geometry, material);
+    grass.position.set(0, 0, 0);
+    skyScene.add(grass);
+
+    grassCamera = new THREE.PerspectiveCamera(75, grassTexture.width / grassTexture.height, 0.1, 1000000);
+    grassCamera.position.set(10, 10, 10);
+    grassCamera.lookAt(new THREE.Vector3(0, 0, 0));
+    grassScene.add(grassCamera);
+    addFlowers(grass);
+}
+
+function addFlowers(grass) {
+    'use strict';
+
+    var colors = [WHITE, ORANGE, RED, BLUE];
+
+    for (var i = 0; i < 1000; i++) {
+        var flower = new THREE.SphereGeometry(0.1, 32, 32);
+        var flowerMaterial = new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random() * colors.length)]});
+        var flowerMesh = new THREE.Mesh(flower, flowerMaterial);
+        // positio stars randomly inside grass
+        flowerMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
+        grass.add(flowerMesh);
+        grassScene.add(flowerMesh);
+    }
+
+}
+
+function createSky() {
+
+    skyScene = new THREE.Scene();
+
+    skyTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
+
+    const geometry = new THREE.BufferGeometry();
+  
+    const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
+      (n) => n  * 20
+    );
+  
+    const indices = [0, 1, 2, 2, 3, 0];
+  
+    const colors = [PURPLE, BLUE, BLUE, PURPLE].flatMap((color) => [
       color.r,
       color.g,
       color.b,
@@ -207,10 +271,29 @@ function createSky() {
     });
   
     const sky = new THREE.Mesh(geometry, material);
-    sky.position.set(0, -10, 0);
-  
-    scene.add(sky);
-  }
+    sky.position.set(0, 0, 0);
+    skyScene.add(sky);
+
+    skyCamera = new THREE.PerspectiveCamera(25, skyTexture.width / skyTexture.height, 0.1, 1000000);
+    skyCamera.position.set(sky.position.x+10, sky.position.y+20, sky.position.z+10);
+    skyCamera.lookAt(new THREE.Vector3(10, 0, 10));
+    skyScene.add(skyCamera);
+    addStars(sky);
+}
+
+function addStars(sky) {
+    'use strict';
+
+    for (let i = 0; i < 2000; i++) {
+        var star = new THREE.SphereGeometry(0.01, 32, 32);
+        var starMaterial = new THREE.MeshBasicMaterial({color: WHITE});
+        var starMesh = new THREE.Mesh(star, starMaterial);
+        // positio stars randomly inside sky plane
+        starMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
+        sky.add(starMesh);
+        skyScene.add(starMesh);
+    }
+}
 
 //////////////////////
 /* CREATE CAMERA(S) */
@@ -218,17 +301,15 @@ function createSky() {
 
 function createCamera() {
     'use strict';
-    perspective_camera = getPerspectiveCamera();
+    camera = getPerspectiveCamera();
 
-    controls = new THREE.OrbitControls(perspective_camera, renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.update();
-
-    return perspective_camera;
 }
 
 function getPerspectiveCamera() {
     const camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 100
+      75, window.innerWidth / window.innerHeight, 0.1, 1000000
     );
     camera.position.set(40, 40, 40);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -241,8 +322,10 @@ function getPerspectiveCamera() {
 
 function createDirectionalLight(obj) {
     'use strict';
-
-    const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    // add directional light to moon
+    var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(0, 0, 0);
+    directionalLight.target.position.set(0, 0, 0);
     obj.add(directionalLight);
 }
 
@@ -268,11 +351,19 @@ function createPontualLight(obj, x, y, z) {
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 
-function createSkyDome() {
+function createSkyDome(x, y, z) {
     'use strict';
 
-    skyDome = new THREE.Object3D();
-    addElipse()
+    var geometry = new THREE.SphereGeometry(100, 32, 32);
+    var material = new THREE.MeshBasicMaterial({
+        map: skyTexture.texture,
+        side: THREE.BackSide
+    });
+    skyDome = new THREE.Mesh(geometry, material);
+
+    skyDome.position.set(x, y, z);
+    scene.add(skyDome);
+    materials.push(material);
 }
 
 function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degree, color) {
@@ -478,7 +569,7 @@ function addMoon(x, y, z) {
     'use strict';
 
     moon = new THREE.Object3D();
-    addElipse(moon, 0, 0, 0, 4, WHITE, 1, 1, 1);
+    addElipse(moon, 0, 0, 0, 4, YELLOW, 1, 1, 1);
     moon.position.set(x, y, z);
     createDirectionalLight(moon);
     scene.add(moon);
