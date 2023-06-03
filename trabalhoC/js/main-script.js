@@ -14,7 +14,7 @@
 //////////////////////
 
 var camera, scene, renderer, controls, perspective_camera;
-var sky, skyScene, skyTexture, skyCamera;
+var skyVar, skyScene, skyTexture, skyCamera;
 var grass, grassScene, grassTexture, grassCamera;
 
 
@@ -23,8 +23,9 @@ var house, ovni, moon, tree, skyDome;
 
 var spotLight;
 var pointLights = [];
-
 var materials = [];
+var grassMesh = [];
+var skyMesh = [];
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = new THREE.Color(0x0000ff), RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 const BROWN = 0x9c4f0c, GREEN = new THREE.Color(0x07820d), ORANGE = 0xfc5203, PURPLE = new THREE.Color(0xa32cc4), YELLOW = 0xf5e105;
@@ -73,7 +74,21 @@ function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
 function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
 function on1KeyDown() { // 1 key
-    camera = perspective_camera;
+    //remove all extra from grassMesh
+    for (var i = 0; i < grassMesh.length; i++) {
+        grassScene.remove(grassMesh[i]);
+    }
+    plane();
+    delete non_conversion_keys[49];
+}
+
+function on2KeyDown() { // 1 key
+    //remove all extra from skyMesh
+    for (var i = 0; i < skyMesh.length; i++) {
+        skyScene.remove(skyMesh[i]);
+    }
+    sky();
+    delete non_conversion_keys[49];
 }
 
 function on6KeyDown() { // 6 key
@@ -172,7 +187,7 @@ function plane() {
     grassScene = new THREE.Scene();
     grassTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
 
-    generateTexture(grassScene, grassTexture, grassColors);
+    generateTexture(grass, grassScene, grassTexture, grassColors);
     createPlane();
 }
 
@@ -182,11 +197,11 @@ function sky() {
     skyScene = new THREE.Scene();
     skyTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
 
-    generateTexture(skyScene, skyTexture, skyColors);
+    generateTexture(skyVar, skyScene, skyTexture, skyColors);
     createSkyDome();
 }
 
-function generateTexture(newScene, newTexture, colors) {
+function generateTexture(obj, newScene, newTexture, colors) {
 
     const geometry = new THREE.BufferGeometry();
     const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map((n) => n  * 20);
@@ -200,7 +215,7 @@ function generateTexture(newScene, newTexture, colors) {
   
     const material = new THREE.MeshBasicMaterial({vertexColors: true,});
   
-    const obj = new THREE.Mesh(geometry, material);
+    obj = new THREE.Mesh(geometry, material);
     obj.position.set(0, 0, 0);
     newScene.add(obj);
 
@@ -210,16 +225,16 @@ function generateTexture(newScene, newTexture, colors) {
     if (newScene == grassScene) {
         grassCamera = newCamera;
         newScene.add(grassCamera);
-        addExtra(obj, 100, 0.1, flowerColors, newScene)
+        addExtra(obj, 100, 0.1, flowerColors, newScene, grassMesh);
     }
     else if (newScene == skyScene) {
         skyCamera = newCamera;
         newScene.add(skyCamera);
-        addExtra(obj, 2000, 0.01, [WHITE], newScene)
+        addExtra(obj, 500, 0.01, [WHITE], newScene, skyMesh);
     }
 }
 
-function addExtra(obj, numObjects, radius, colors, scene) { // add stars or flowers
+function addExtra(obj, numObjects, radius, colors, scene, meshArray) { // add stars or flowers
     'use strict';
 
     for (let i = 0; i < numObjects; i++) {
@@ -229,6 +244,7 @@ function addExtra(obj, numObjects, radius, colors, scene) { // add stars or flow
         newObjectMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
         obj.add(newObjectMesh);
         scene.add(newObjectMesh);
+        meshArray.push(newObjectMesh);
     }
 }
 
@@ -600,6 +616,12 @@ function onKeyDown(e) {
     switch (e.keyCode) {
 
         // wireframe toggle
+        case 49: // 1
+            non_conversion_keys[49] = on1KeyDown;
+            break;
+        case 50: // 2
+            non_conversion_keys[50] = on2KeyDown;
+            break;
         case 54: // 6
             non_conversion_keys[54] = on6KeyDown;
             break;
