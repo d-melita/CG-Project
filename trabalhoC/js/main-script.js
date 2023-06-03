@@ -13,8 +13,10 @@
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, scene, renderer, controls, perspective_camera, skyScene, skyTexture, grassScene, grassTexture;
-var skyCamera, grassCamera;
+var camera, scene, renderer, controls, perspective_camera;
+var sky, skyScene, skyTexture, skyCamera;
+var grass, grassScene, grassTexture, grassCamera;
+
 
 var axesHelper;
 var house, ovni, moon, tree, skyDome;
@@ -26,6 +28,10 @@ var materials = [];
 
 const WHITE = 0xffffff, BLACK = 0x000000, BLUE = new THREE.Color(0x0000ff), RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
 const BROWN = 0x9c4f0c, GREEN = new THREE.Color(0x07820d), ORANGE = 0xfc5203, PURPLE = new THREE.Color(0xa32cc4), YELLOW = 0xf5e105;
+
+const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
+const grassColors = [GREEN, GREEN, GREEN, GREEN];
+const flowerColors = [WHITE, ORANGE, RED, BLUE];
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -152,153 +158,77 @@ function createScene() {
     scene = new THREE.Scene();
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
-    scene.background = new THREE.Color(BACKGROUND_COLOR);
-    createSky();
-    generatePlane();
-    createPlane();
-    createSkyDome(0, 0, 0);
+    plane();
+    sky();
     addHouse(0, 4.5, 0);
     addOVNI(0, 30, 0);
     addMoon(0, 35, 15);
     addTree(0, 5.5, 30);
 }
 
-function createPlane() {
+function plane() {
     'use strict';
-
-    const loader = new THREE.TextureLoader();
-    const displacementMap = loader.load('./textures/heightmap.png');
-
-    const material = new THREE.MeshStandardMaterial({
-        displacementMap: displacementMap,
-        displacementScale: 20,
-        side: THREE.DoubleSide,
-        map: grassTexture.texture
-    });
-
-    const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
-
-    const plane = new THREE.Mesh(geometry, material);
-
-    plane.rotation.x = -Math.PI / 2;
-    
-    scene.add(plane);
-}
-
-function generatePlane() {
 
     grassScene = new THREE.Scene();
-
     grassTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
 
-    const geometry = new THREE.BufferGeometry();
-  
-    const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
-      (n) => n  * 200
-    );
-  
-    const indices = [0, 1, 2, 2, 3, 0];
-  
-    const colors = [GREEN, GREEN, GREEN, GREEN].flatMap((color) => [
-      color.r,
-      color.g,
-      color.b,
-    ]);
-  
-    geometry.setIndex(indices);
-    geometry.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3)
-    );
-    geometry.computeVertexNormals();
-    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-  
-    const material = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-    });
-  
-    const grass = new THREE.Mesh(geometry, material);
-    grass.position.set(-100, 0, 0);
-    grassScene.add(grass);
-
-    grassCamera = new THREE.PerspectiveCamera(75, grassTexture.width / grassTexture.height, 0.1, 1000000);
-    grassCamera.position.set(10, 10, 10);
-    grassCamera.lookAt(new THREE.Vector3(10, 0, 10));
-    grassScene.add(grassCamera);
-    addFlowers(grass);
+    generateTexture(grassScene, grassTexture, grassColors);
+    createPlane();
 }
 
-function addFlowers(grass) {
+function sky() {
     'use strict';
-
-    var colors = [WHITE, ORANGE, RED, BLUE];
-
-    for (var i = 0; i < 100; i++) {
-        var flower = new THREE.SphereGeometry(0.1, 32, 32);
-        var flowerMaterial = new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random() * colors.length)]});
-        var flowerMesh = new THREE.Mesh(flower, flowerMaterial);
-        // positio stars randomly inside grass
-        flowerMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
-        grass.add(flowerMesh);
-        grassScene.add(flowerMesh);
-    }
-
-}
-
-function createSky() {
 
     skyScene = new THREE.Scene();
-
     skyTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
 
+    generateTexture(skyScene, skyTexture, skyColors);
+    createSkyDome();
+}
+
+function generateTexture(newScene, newTexture, colors) {
+
     const geometry = new THREE.BufferGeometry();
-  
-    const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map(
-      (n) => n  * 20
-    );
-  
+    const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map((n) => n  * 20);
     const indices = [0, 1, 2, 2, 3, 0];
-  
-    const colors = [PURPLE, BLUE, BLUE, PURPLE].flatMap((color) => [
-      color.r,
-      color.g,
-      color.b,
-    ]);
+    colors = colors.flatMap((color) => [color.r, color.g, color.b,]);
   
     geometry.setIndex(indices);
-    geometry.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3)
-    );
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     geometry.computeVertexNormals();
     geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   
-    const material = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-    });
+    const material = new THREE.MeshBasicMaterial({vertexColors: true,});
   
-    const sky = new THREE.Mesh(geometry, material);
-    sky.position.set(0, 0, 0);
-    skyScene.add(sky);
+    const obj = new THREE.Mesh(geometry, material);
+    obj.position.set(0, 0, 0);
+    newScene.add(obj);
 
-    skyCamera = new THREE.PerspectiveCamera(25, skyTexture.width / skyTexture.height, 0.1, 1000000);
-    skyCamera.position.set(sky.position.x+10, sky.position.y+20, sky.position.z+10);
-    skyCamera.lookAt(new THREE.Vector3(10, 0, 10));
-    skyScene.add(skyCamera);
-    addStars(sky);
+    let newCamera = getPerspectiveCamera(25, newTexture.width / newTexture.height, 0.1, 1000000, obj.position.x+10, obj.position.y+20, obj.position.z+10, 10, 0, 10);
+
+    // weird if, doesnt work if I set an argument called camera - it works tho
+    if (newScene == grassScene) {
+        grassCamera = newCamera;
+        newScene.add(grassCamera);
+        addExtra(obj, 100, 0.1, flowerColors, newScene)
+    }
+    else if (newScene == skyScene) {
+        skyCamera = newCamera;
+        newScene.add(skyCamera);
+        addExtra(obj, 2000, 0.01, [WHITE], newScene)
+    }
 }
 
-function addStars(sky) {
+function addExtra(obj, numObjects, radius, colors, scene) { // add stars or flowers
     'use strict';
 
-    for (let i = 0; i < 2000; i++) {
-        var star = new THREE.SphereGeometry(0.01, 32, 32);
-        var starMaterial = new THREE.MeshBasicMaterial({color: WHITE});
-        var starMesh = new THREE.Mesh(star, starMaterial);
-        // positio stars randomly inside sky plane
-        starMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
-        sky.add(starMesh);
-        skyScene.add(starMesh);
+    for (let i = 0; i < numObjects; i++) {
+        var newObject = new THREE.SphereGeometry(radius, 32, 32);
+        var newObjectMaterial = new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random() * colors.length)]});
+        var newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
+        newObjectMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
+        obj.add(newObjectMesh);
+        scene.add(newObjectMesh);
     }
 }
 
@@ -308,18 +238,18 @@ function addStars(sky) {
 
 function createCamera() {
     'use strict';
-    camera = getPerspectiveCamera();
+    camera = getPerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000000, 40, 40, 40, 0, 0, 0);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.update();
 }
 
-function getPerspectiveCamera() {
+function getPerspectiveCamera(fov, aspect, near, far, x, y, z, lookX, lookY, lookZ) {
     const camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 1000000
+        fov, aspect, near, far
     );
-    camera.position.set(40, 40, 40);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    camera.position.set(x, y, z);
+    camera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
     return camera;
   }
 
@@ -358,7 +288,27 @@ function createPontualLight(obj, x, y, z) {
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 
-function createSkyDome(x, y, z) {
+function createPlane() {
+    'use strict';
+
+    const loader = new THREE.TextureLoader();
+    const displacementMap = loader.load('./textures/heightmap.png');
+
+    const material = new THREE.MeshStandardMaterial({
+        displacementMap: displacementMap,
+        displacementScale: 20,
+        side: THREE.DoubleSide,
+        map: grassTexture.texture
+    });
+
+    const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
+    const plane = new THREE.Mesh(geometry, material);
+    plane.rotation.x = -Math.PI / 2; // make it horizontal
+    scene.add(plane);
+    materials.push(material);
+}
+
+function createSkyDome() {
     'use strict';
 
     var geometry = new THREE.SphereGeometry(100, 32, 32);
@@ -367,8 +317,7 @@ function createSkyDome(x, y, z) {
         side: THREE.BackSide
     });
     skyDome = new THREE.Mesh(geometry, material);
-
-    skyDome.position.set(x, y, z);
+    skyDome.position.set(0, 0, 0);
     scene.add(skyDome);
     materials.push(material);
 }
