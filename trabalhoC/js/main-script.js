@@ -44,7 +44,6 @@ const cockpitRadius = 2, ovniCockpitY = 1.5;
 const ovniBodyRadius = 1, onviBodyScaleX = 6, ovniBodyScaleY = 1.5, ovniBodyScaleZ = 6;
 const ovniBaseRadius = 2, ovniBaseHeight = 2, ovniBaseY = -1.5;
 const onviLightsX = 4, ovniLightsRadius = 1, onviLightsY = -0.5; //ovniLightsY = 2-1-1.5;
-const centered = 0;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -88,18 +87,16 @@ function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 function on1KeyDown() { // 1 key
     //remove all extra from grassMesh
     for (var i = 0; i < grassMesh.length; i++) {
-        grassScene.remove(grassMesh[i]);
+        grassMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
-    plane();
     delete non_conversion_keys[49];
 }
 
 function on2KeyDown() { // 1 key
     //remove all extra from skyMesh
     for (var i = 0; i < skyMesh.length; i++) {
-        skyScene.remove(skyMesh[i]);
+        skyMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
-    sky();
     delete non_conversion_keys[49];
 }
 
@@ -301,8 +298,8 @@ function createDirectionalLight(obj) {
     'use strict';
     // add directional light to moon
     moonDirectionalLight = new THREE.DirectionalLight(YELLOW, 0.8);
-    moonDirectionalLight.position.set(centered, centered, centered);
-    moonDirectionalLight.target.position.set(centered, centered, centered);
+    moonDirectionalLight.position.set(0, 0, 0);
+    moonDirectionalLight.target.position.set(0, 0, 0);
     obj.add(moonDirectionalLight);
 }
 
@@ -314,7 +311,7 @@ function createSpotLight(obj, x, y, z) {
     spotLight.position.set(x, y, z);
     obj.add(spotLight);
     var spotLightTarget = new THREE.Object3D();
-    spotLightTarget.position.set(obj.position.x, centered, obj.position.z);
+    spotLightTarget.position.set(obj.position.x, 0, obj.position.z);
     spotLight.target = spotLightTarget;
     obj.add(spotLightTarget);
     scene.add(spotLightTarget);
@@ -409,7 +406,7 @@ function addCockpit(obj, x, y, z) {
     'use strict';
 
     var cockpit = new THREE.Object3D();
-    addElipse(cockpit, centered, centered, centered, cockpitRadius, WHITE, standardScale, standardScale, standardScale);
+    addElipse(cockpit, 0, 0, 0, cockpitRadius, WHITE, standardScale, standardScale, standardScale);
 
     cockpit.position.set(x, y, z);
     obj.add(cockpit);
@@ -420,7 +417,7 @@ function addBody(obj, x, y, z) {
     'use strict';
 
     var body = new THREE.Object3D();
-    addElipse(body, centered, centered, centered, ovniBodyRadius, BLACK, onviBodyScaleX, ovniBodyScaleY, ovniBodyScaleZ); // main body
+    addElipse(body, 0, 0, 0, ovniBodyRadius, BLACK, onviBodyScaleX, ovniBodyScaleY, ovniBodyScaleZ); // main body
 
     body.position.set(x, y, z);
     obj.add(body);
@@ -432,7 +429,7 @@ function addBase(obj, x, y, z) {
 
     var base = new THREE.Object3D();
 
-    addCylinder(base, centered, centered, centered, ovniBaseRadius, ovniBaseHeight, '', 0, WHITE);
+    addCylinder(base, 0, 0, 0, ovniBaseRadius, ovniBaseHeight, '', 0, WHITE);
     base.position.set(x, y, z);
     obj.add(base);
 }
@@ -445,11 +442,11 @@ function addLights(obj, x, y, z) {
     for (var i = 0; i < 8; i++){
         var light = new THREE.Object3D();
 
-        addElipse(light, onviLightsX, centered, centered, ovniLightsRadius, BLUE, standardScale, standardScale, standardScale);
+        addElipse(light, onviLightsX, 0, 0, ovniLightsRadius, BLUE, standardScale, standardScale, standardScale);
 
         light.rotateY(rotation*i);
         light.position.set(x, y, z);
-        createPontualLight(light, centered, centered, centered);
+        createPontualLight(light, 0, 0, 0);
         obj.add(light);
     }
 }
@@ -459,13 +456,13 @@ function addOVNI(x, y, z) {
 
     ovni = new THREE.Object3D();
 
-    addCockpit(ovni, centered, ovniCockpitY, centered);
-    addBody(ovni, centered, centered, centered);
-    addBase(ovni, centered, ovniBaseY, centered);
-    addLights(ovni, centered, onviLightsY, centered);
+    addCockpit(ovni, 0, ovniCockpitY, 0);
+    addBody(ovni, 0, 0, 0);
+    addBase(ovni, 0, ovniBaseY, 0);
+    addLights(ovni, 0, onviLightsY, 0);
 
     ovni.position.set(x, y, z);
-    createSpotLight(ovni, centered, centered, centered);
+    createSpotLight(ovni, 0, 0, 0);
     scene.add(ovni);
 }
 
@@ -567,7 +564,7 @@ function addMoon(x, y, z) {
     var geometry = new THREE.SphereGeometry(MOON_RADIUS, 32, 32);
     var material = new THREE.MeshStandardMaterial({color: YELLOW, wireframe: false, emissive: YELLOW, emissiveIntensity: 0.5});
     var sphere = new THREE.Mesh(geometry, material);
-    sphere.position.set(centered, centered, centered);
+    sphere.position.set(0, 0, 0);
     moon.add(sphere);
     materials.push(material);
     moon.position.set(x, y, z);
@@ -611,14 +608,6 @@ function addTree(x, y, z) {
 //////////////////////
 /* CHECK COLLISIONS */
 //////////////////////
-
-function checkCollision(obj1, obj2){
-    'use strict';
-
-    return obj1.max.x >= obj2.min.x && obj1.min.x <= obj2.max.x &&
-        obj1.max.y >= obj2.min.y && obj1.min.y <= obj2.max.y &&
-        obj1.max.z >= obj2.min.z && obj1.min.z <= obj2.max.z;
-}
 
 ////////////////////////////
 /* RESIZE WINDOW CALLBACK */
