@@ -21,7 +21,7 @@ var grass, grassScene, grassTexture, grassCamera;
 var axesHelper;
 var house, ovni, moon, tree, skyDome;
 
-var spotLight;
+var ambientLight, spotLight, moonDirectionalLight;
 var pointLights = [];
 var materials = [];
 var grassMesh = [];
@@ -33,6 +33,18 @@ const BROWN = 0x9c4f0c, GREEN = new THREE.Color(0x07820d), ORANGE = 0xfc5203, PU
 const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
 const grassColors = [GREEN, GREEN, GREEN, GREEN];
 const flowerColors = [WHITE, ORANGE, RED, BLUE];
+
+const OVNI_HEIGHT = 30;
+const MOON_HEIGHT = 35, MOON_Z = 15, MOON_RADIUS = 4;
+const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
+const TREE_Y = 5.5, TREE_Z = 30;
+
+const standardScale = 1;
+const cockpitRadius = 2, ovniCockpitY = 1.5;
+const ovniBodyRadius = 1, onviBodyScaleX = 6, ovniBodyScaleY = 1.5, ovniBodyScaleZ = 6;
+const ovniBaseRadius = 2, ovniBaseHeight = 2, ovniBaseY = -1.5;
+const onviLightsX = 4, ovniLightsRadius = 1, onviLightsY = -0.5; //ovniLightsY = 2-1-1.5;
+const centered = 0;
 
 var movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -115,6 +127,11 @@ function onSKeyDown() { // S key - turn on/off spot light
     delete non_conversion_keys[83];
 }
 
+function onDKeyDown() { // S key - turn on/off spot light
+    moonDirectionalLight.visible = !moonDirectionalLight.visible;
+    delete non_conversion_keys[68];
+}
+
 function update(){
     'use strict';
 
@@ -175,10 +192,11 @@ function createScene() {
     scene.add(axesHelper);
     plane();
     sky();
-    addHouse(0, 4.5, 0);
-    addOVNI(0, 30, 0);
-    addMoon(0, 35, 15);
-    addTree(0, 5.5, 30);
+    createAmbientLight();
+    addHouse(0, HOUSE_Y, 0);
+    addOVNI(0, OVNI_HEIGHT, 0);
+    addMoon(0, MOON_HEIGHT, MOON_Z);
+    addTree(0, TREE_Y, TREE_Z);
 }
 
 function plane() {
@@ -221,7 +239,7 @@ function generateTexture(obj, newScene, newTexture, colors) {
 
     let newCamera = getPerspectiveCamera(25, newTexture.width / newTexture.height, 0.1, 1000000, obj.position.x+10, obj.position.y+20, obj.position.z+10, 10, 0, 10);
 
-    // weird if, doesnt work if I set an argument called camera - it works tho
+    // weird if statement, doesnt work if I set an argument called camera - it works tho
     if (newScene == grassScene) {
         grassCamera = newCamera;
         newScene.add(grassCamera);
@@ -273,22 +291,33 @@ function getPerspectiveCamera(fov, aspect, near, far, x, y, z, lookX, lookY, loo
 /* CREATE LIGHT(S) */
 /////////////////////
 
+function createAmbientLight() {
+    'use strict';
+    ambientLight = new THREE.AmbientLight(WHITE, 0.5);
+    scene.add(ambientLight);
+}
+
 function createDirectionalLight(obj) {
     'use strict';
     // add directional light to moon
-    var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(0, 0, 0);
-    directionalLight.target.position.set(0, 0, 0);
-    obj.add(directionalLight);
+    moonDirectionalLight = new THREE.DirectionalLight(YELLOW, 0.8);
+    moonDirectionalLight.position.set(centered, centered, centered);
+    moonDirectionalLight.target.position.set(centered, centered, centered);
+    obj.add(moonDirectionalLight);
 }
 
-function createLight(obj, x, y, z) {
+function createSpotLight(obj, x, y, z) {
     'use strict';
 
     // add spot light to ovni
     spotLight = new THREE.SpotLight(0xffffff, 1, 100, 0.5, 1);
     spotLight.position.set(x, y, z);
     obj.add(spotLight);
+    var spotLightTarget = new THREE.Object3D();
+    spotLightTarget.position.set(obj.position.x, centered, obj.position.z);
+    spotLight.target = spotLightTarget;
+    obj.add(spotLightTarget);
+    scene.add(spotLightTarget);
 }
 
 function createPontualLight(obj, x, y, z) {
@@ -380,7 +409,7 @@ function addCockpit(obj, x, y, z) {
     'use strict';
 
     var cockpit = new THREE.Object3D();
-    addElipse(cockpit, 0, 0, 0, 2, WHITE, 1, 1, 1); // cockpit
+    addElipse(cockpit, centered, centered, centered, cockpitRadius, WHITE, standardScale, standardScale, standardScale);
 
     cockpit.position.set(x, y, z);
     obj.add(cockpit);
@@ -391,7 +420,7 @@ function addBody(obj, x, y, z) {
     'use strict';
 
     var body = new THREE.Object3D();
-    addElipse(body, 0, 0, 0, 1, BLACK, 6, 1.5, 6); // main body
+    addElipse(body, centered, centered, centered, ovniBodyRadius, BLACK, onviBodyScaleX, ovniBodyScaleY, ovniBodyScaleZ); // main body
 
     body.position.set(x, y, z);
     obj.add(body);
@@ -403,7 +432,7 @@ function addBase(obj, x, y, z) {
 
     var base = new THREE.Object3D();
 
-    addCylinder(base, 0, 0, 0, 2, 2, '', 0, WHITE);
+    addCylinder(base, centered, centered, centered, ovniBaseRadius, ovniBaseHeight, '', 0, WHITE);
     base.position.set(x, y, z);
     obj.add(base);
 }
@@ -416,11 +445,11 @@ function addLights(obj, x, y, z) {
     for (var i = 0; i < 8; i++){
         var light = new THREE.Object3D();
 
-        addElipse(light, 4, 0, 0, 1, BLUE, 1, 1, 1);
+        addElipse(light, onviLightsX, centered, centered, ovniLightsRadius, BLUE, standardScale, standardScale, standardScale);
 
         light.rotateY(rotation*i);
         light.position.set(x, y, z);
-        createPontualLight(light, 0, 0, 0);
+        createPontualLight(light, centered, centered, centered);
         obj.add(light);
     }
 }
@@ -430,18 +459,13 @@ function addOVNI(x, y, z) {
 
     ovni = new THREE.Object3D();
 
-    addCockpit(ovni, 0, 1.5, 0);
-    addBody(ovni, 0, 0, 0);
-    addBase(ovni, 0, -1.5, 0);
-    addLights(ovni, 0, 2-1-1.5, 0);
+    addCockpit(ovni, centered, ovniCockpitY, centered);
+    addBody(ovni, centered, centered, centered);
+    addBase(ovni, centered, ovniBaseY, centered);
+    addLights(ovni, centered, onviLightsY, centered);
 
-    ovni.position.set(x, y + 3.5, z);
-    createLight(ovni, 0, 0, 0);
-    var spotLightTarget = new THREE.Object3D();
-    spotLightTarget.position.set(ovni.position.x, 0, ovni.position.z);
-    spotLight.target = spotLightTarget;
-    ovni.add(spotLightTarget);
-    scene.add(spotLightTarget);
+    ovni.position.set(x, y, z);
+    createSpotLight(ovni, centered, centered, centered);
     scene.add(ovni);
 }
 
@@ -453,7 +477,6 @@ function addGeometry(obj, x, y, z, vertices, indexs, color) {
     var bufferTexture = new THREE.BufferGeometry();
     
     bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    
 
     bufferTexture.setIndex(indexs);
     bufferTexture.computeVertexNormals();
@@ -518,6 +541,7 @@ function addHouse(x, y, z) {
 
     addGeometry(house, 0, 0, 0, verticesWalls, indexsWalls, WHITE);
     addGeometry(house, 0, 0, 0, verticesWalls, doorWindowsIndexs, BLUE);
+
     var verticesRoof = [
         0, 8, 0,
         0, 8, 16,
@@ -540,7 +564,12 @@ function addMoon(x, y, z) {
     'use strict';
 
     moon = new THREE.Object3D();
-    addElipse(moon, 0, 0, 0, 4, YELLOW, 1, 1, 1);
+    var geometry = new THREE.SphereGeometry(MOON_RADIUS, 32, 32);
+    var material = new THREE.MeshStandardMaterial({color: YELLOW, wireframe: false, emissive: YELLOW, emissiveIntensity: 0.5});
+    var sphere = new THREE.Mesh(geometry, material);
+    sphere.position.set(centered, centered, centered);
+    moon.add(sphere);
+    materials.push(material);
     moon.position.set(x, y, z);
     createDirectionalLight(moon);
     scene.add(moon);
@@ -625,19 +654,18 @@ function onKeyDown(e) {
         case 54: // 6
             non_conversion_keys[54] = on6KeyDown;
             break;
-
         case 72: // H
             non_conversion_keys[72] = onHKeyDown;
             break;
-
         case 80: // P
             non_conversion_keys[80] = onPKeyDown;
             break;
-        
         case 83: // S
             non_conversion_keys[83] = onSKeyDown;
             break;
-
+        case 68: // D
+            non_conversion_keys[68] = onDKeyDown;
+            break;
         // case arrow conversion_keys: move trailer
         case 37: // left arrow
             conversion_keys[37] = onLeftKeyDown;
