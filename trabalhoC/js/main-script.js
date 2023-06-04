@@ -17,7 +17,6 @@ var camera, scene, renderer, controls, perspective_camera;
 var skyVar, skyScene, skyTexture, skyCamera;
 var grass, grassScene, grassTexture, grassCamera;
 
-
 var axesHelper;
 var house, ovni, moon, tree, skyDome;
 
@@ -27,12 +26,11 @@ var materials = [];
 var grassMesh = [];
 var skyMesh = [];
 
-const WHITE = 0xffffff, BLACK = 0x000000, BLUE = new THREE.Color(0x0000ff), RED = 0xff0000, DARK_RED = 0x960909, GREY = 0x909090, BACKGROUND_COLOR = 0xccf7ff;
-const BROWN = 0x9c4f0c, GREEN = new THREE.Color(0x07820d), ORANGE = 0xfc5203, PURPLE = new THREE.Color(0xa32cc4), YELLOW = 0xf5e105;
+const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), RED = new THREE.Color(0xff0000), DARK_RED = new THREE.Color(0x960909), GREY = new THREE.Color(0x909090), BROWN = new THREE.Color(0x9c4f0c), GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
 
 const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
 const grassColors = [GREEN, GREEN, GREEN, GREEN];
-const flowerColors = [WHITE, ORANGE, RED, BLUE];
+const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.01, flowerRadius = 0.05;
 
 const OVNI_HEIGHT = 30;
@@ -52,7 +50,7 @@ const MOVEMENT_SPEED = 15;
 var clock = new THREE.Clock();
 var elapsedTime;
 
-var conversion_keys = {}, non_conversion_keys = {};
+var keys = {};
 
 ////////////////////////////////
 /* INITIALIZE ANIMATION CYCLE */
@@ -89,43 +87,43 @@ function on1KeyDown() { // 1 key
     for (var i = 0; i < grassMesh.length; i++) {
         grassMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
-    delete non_conversion_keys[49];
+    delete keys[49];
 }
 
 function on2KeyDown() { // 2 key
     for (var i = 0; i < skyMesh.length; i++) {
         skyMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
-    delete non_conversion_keys[50];
+    delete keys[50];
 }
 
 function on6KeyDown() { // 6 key
     for (var i = 0; i < materials.length; i++) {
         materials[i].wireframe = !materials[i].wireframe;
     }
-    delete non_conversion_keys[54];
+    delete keys[54];
 }
 
 function onHKeyDown() { // H key
     axesHelper.visible = !axesHelper.visible;
-    delete non_conversion_keys[72];
+    delete keys[72];
 }
 
 function onPKeyDown() { // P key - turn on/off point light
     for (var i = 0; i < pointLights.length; i++) {
         pointLights[i].visible = !pointLights[i].visible;
     }
-    delete non_conversion_keys[80];
+    delete keys[80];
 }
 
 function onSKeyDown() { // S key - turn on/off spot light
     spotLight.visible = !spotLight.visible;
-    delete non_conversion_keys[83];
+    delete keys[83];
 }
 
 function onDKeyDown() { // D key - turn on/off moondirectional light
     moonDirectionalLight.visible = !moonDirectionalLight.visible;
-    delete non_conversion_keys[68];
+    delete keys[68];
 }
 
 function update(){
@@ -133,10 +131,10 @@ function update(){
 
     movementVector.set(0, 0, 0);
 
-    for (const [key, val] of Object.entries(non_conversion_keys))
+    for (const [key, val] of Object.entries(keys))
         val.call();
 
-    for (const [key, val] of Object.entries(conversion_keys))
+    for (const [key, val] of Object.entries(keys))
         val.call();
 
     ovni.rotateY(0.05);
@@ -634,38 +632,38 @@ function onKeyDown(e) {
 
         // wireframe toggle
         case 49: // 1
-            non_conversion_keys[49] = on1KeyDown;
+            keys[49] = on1KeyDown;
             break;
         case 50: // 2
-            non_conversion_keys[50] = on2KeyDown;
+            keys[50] = on2KeyDown;
             break;
         case 54: // 6
-            non_conversion_keys[54] = on6KeyDown;
+            keys[54] = on6KeyDown;
             break;
         case 72: // H
-            non_conversion_keys[72] = onHKeyDown;
+            keys[72] = onHKeyDown;
             break;
         case 80: // P
-            non_conversion_keys[80] = onPKeyDown;
+            keys[80] = onPKeyDown;
             break;
         case 83: // S
-            non_conversion_keys[83] = onSKeyDown;
+            keys[83] = onSKeyDown;
             break;
         case 68: // D
-            non_conversion_keys[68] = onDKeyDown;
+            keys[68] = onDKeyDown;
             break;
-        // case arrow conversion_keys: move trailer
+        // case arrow keys: move trailer
         case 37: // left arrow
-            conversion_keys[37] = onLeftKeyDown;
+            keys[37] = onLeftKeyDown;
             break;
         case 38: // up arrow
-            conversion_keys[38] = onUpKeyDown;
+            keys[38] = onUpKeyDown;
             break;
         case 39: // right arrow
-            conversion_keys[39] = onRightKeyDown;
+            keys[39] = onRightKeyDown;
             break;
         case 40: // down arrow
-            conversion_keys[40] = onDownKeyDown;
+            keys[40] = onDownKeyDown;
             break;
         default:
             break;
@@ -679,6 +677,5 @@ function onKeyDown(e) {
 function onKeyUp(e){
     'use strict';
 
-    delete conversion_keys[e.keyCode];
-    delete non_conversion_keys[e.keyCode];
+    delete keys[e.keyCode];
 }
