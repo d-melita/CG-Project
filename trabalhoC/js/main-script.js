@@ -96,7 +96,7 @@ function on2KeyDown() { // 2 key
     for (var i = 0; i < skyMesh.length; i++) {
         skyMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
-    delete non_conversion_keys[49];
+    delete non_conversion_keys[50];
 }
 
 function on6KeyDown() { // 6 key
