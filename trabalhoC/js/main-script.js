@@ -630,19 +630,15 @@ function onKeyDown(e) {
 
     switch (e.keyCode) {
 
-        // wireframe toggle
+        // number keys: change scenery
         case 49: // 1
             keys[49] = on1KeyDown;
             break;
         case 50: // 2
             keys[50] = on2KeyDown;
             break;
-        case 54: // 6
-            keys[54] = on6KeyDown;
-            break;
-        case 72: // H
-            keys[72] = onHKeyDown;
-            break;
+
+        // regular keys: change lights
         case 80: // P
             keys[80] = onPKeyDown;
             break;
@@ -652,7 +648,8 @@ function onKeyDown(e) {
         case 68: // D
             keys[68] = onDKeyDown;
             break;
-        // case arrow keys: move trailer
+
+        // case arrow keys: move ovni
         case 37: // left arrow
             keys[37] = onLeftKeyDown;
             break;
@@ -665,6 +662,15 @@ function onKeyDown(e) {
         case 40: // down arrow
             keys[40] = onDownKeyDown;
             break;
+
+        // extra keys: toggle wireframe and axis helper
+        case 54: // 6
+            keys[54] = on6KeyDown;
+            break;
+        case 72: // H
+            keys[72] = onHKeyDown;
+            break;
+
         default:
             break;
     }
