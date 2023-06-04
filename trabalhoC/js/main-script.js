@@ -36,7 +36,8 @@ const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.01, flowerRadiu
 const OVNI_HEIGHT = 30;
 const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
-const TREE_Y = 5.5, TREE_Z = 30;
+const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 10;
+var trees = [];
 
 const standardScale = 1;
 const cockpitRadius = 2, ovniCockpitY = 1.5;
@@ -190,7 +191,7 @@ function createScene() {
     addHouse(0, HOUSE_Y, 0);
     addOVNI(0, OVNI_HEIGHT, 0);
     addMoon(0, MOON_HEIGHT, MOON_Z);
-    addTree(0, TREE_Y, TREE_Z);
+    addTrees();
 }
 
 function plane() {
@@ -250,7 +251,7 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray) { // add st
     'use strict';
 
     for (let i = 0; i < numObjects; i++) {
-        var newObject = new THREE.SphereGeometry(radius, 32, 32);
+        var newObject = new THREE.SphereGeometry(radius, 32); 
         var newObjectMaterial = new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random() * colors.length)]});
         var newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
         newObjectMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
@@ -583,23 +584,44 @@ function addTrunks(obj, x, y, z) {
     'use strict';
 
     var trunk = new THREE.Object3D();
+    var trunk1 = new THREE.Object3D();
+    var trunk2 = new THREE.Object3D();
+    var trunks = new THREE.Object3D();
     addCylinder(trunk, 0, 0, 0, 1, 3, '', 0, BROWN); // base trunk
-    addCylinder(trunk, 0, 3.2, 1.3, 1, 5.2, 'x', Math.PI/4, BROWN);
-    addCylinder(trunk, 0, 4.2, -2, 1, 7, 'x', -Math.PI/4, BROWN);
+    addCylinder(trunk1, 0, 3.2, 1.3, 1, 5.2, 'x', Math.PI/4, BROWN);
+    addCylinder(trunk2, 0, 4.2, -2, 1, 7, 'x', -Math.PI/4, BROWN);
+    addLeaves(trunk1, 0, 5, 3);
+    addLeaves(trunk2, 0, 7, -4);
+    trunks.add(trunk1);
+    trunks.add(trunk2);
+    trunks.rotateY(Math.random()*Math.PI*2);
+    trunk.add(trunks);
 
     trunk.position.set(x, y, z);
     obj.add(trunk);
 }
 
-function addTree(x, y, z) {
+function addTree(x, y, z, size) {
     'use strict';
 
     tree = new THREE.Object3D();
-    addTrunks(tree, 0, 0, 0);
-    addLeaves(tree, 0, 5, 3);
-    addLeaves(tree, 0, 7, -4);
+    addTrunks(tree, 0, 0, 0, size);
+    tree.scale.set(1, size, 1);
     tree.position.set(x, y, z);
     scene.add(tree);
+    trees.push(tree);
+}
+
+function addTrees() {
+    'use strict';
+
+    for (let i = 0; i < numOfTrees; i++) {
+        let x = Math.random() * 100 - 50;
+        let z = Math.random() * 100 - 50;
+        let size = Math.random() + 1;
+        addTree(x, TREE_Y, z, size);
+    }
+    // TODO check if trees colide with each other, with the house and if they are to close to the border
 }
 
 //////////////////////
