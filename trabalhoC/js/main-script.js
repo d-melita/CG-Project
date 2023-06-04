@@ -319,7 +319,14 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray, size) {
         );
         let newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
 
-        newObjectMesh.position.set(Math.random() * (size - radius), 0, Math.random() * (size - radius));
+        let newPosition = new THREE.Vector3(Math.random() * (size - radius), 0, Math.random() * (size - radius));
+        for (let j = 0; j < i; j++) {
+            if (newPosition.distanceTo(meshArray[j].position) < 2 * radius) {
+                newPosition = new THREE.Vector3(Math.random() * (size - radius), 0, Math.random() * (size - radius));
+                j = 0;
+            }
+        }
+        newObjectMesh.position.set(newPosition.x, newPosition.y, newPosition.z);
 
         obj.add(newObjectMesh);
         scene.add(newObjectMesh);
