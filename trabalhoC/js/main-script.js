@@ -86,15 +86,13 @@ function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
 function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
 function on1KeyDown() { // 1 key
-    //remove all extra from grassMesh
     for (var i = 0; i < grassMesh.length; i++) {
         grassMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
     delete non_conversion_keys[49];
 }
 
-function on2KeyDown() { // 1 key
-    //remove all extra from skyMesh
+function on2KeyDown() { // 2 key
     for (var i = 0; i < skyMesh.length; i++) {
         skyMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
     }
