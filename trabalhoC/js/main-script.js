@@ -125,7 +125,7 @@ function onSKeyDown() { // S key - turn on/off spot light
     delete non_conversion_keys[83];
 }
 
-function onDKeyDown() { // S key - turn on/off spot light
+function onDKeyDown() { // D key - turn on/off moondirectional light
     moonDirectionalLight.visible = !moonDirectionalLight.visible;
     delete non_conversion_keys[68];
 }
@@ -669,7 +669,6 @@ function onKeyDown(e) {
         case 40: // down arrow
             conversion_keys[40] = onDownKeyDown;
             break;
-
         default:
             break;
     }
