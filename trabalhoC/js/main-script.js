@@ -22,11 +22,12 @@ let house, ovni, moon, tree, skyDome;
 
 let ambientLight, spotLight, directionalLight;
 let pointLights = [];
-let materials = [];
+let sceneObjects = [];
 let grassMesh = [];
 let skyMesh = [];
 
 const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), RED = new THREE.Color(0xff0000), DARK_RED = new THREE.Color(0x960909), GREY = new THREE.Color(0x909090), BROWN = new THREE.Color(0x9c4f0c), GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
+const MATERIAL = 0;
 
 const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
 const grassColors = [GREEN, GREEN, GREEN, GREEN];
@@ -100,8 +101,8 @@ function on2KeyDown() { // 2 key
 }
 
 function on6KeyDown() { // 6 key
-    for (var i = 0; i < materials.length; i++) {
-        materials[i].wireframe = !materials[i].wireframe;
+    for (var i = 0; i < sceneObjects.length; i++) {
+        sceneObjects[i]["active"].wireframe = !sceneObjects[i]["active"].wireframe;
     }
     delete keys[54];
 }
@@ -109,6 +110,36 @@ function on6KeyDown() { // 6 key
 function onHKeyDown() { // H key
     axesHelper.visible = !axesHelper.visible;
     delete keys[72];
+}
+
+function onQKeyDown() { // Q key - change to Lambert material
+    for (var i = 0; i < sceneObjects.length; i++) {
+        sceneObjects[i]["active"].wireframe = false;
+        if(sceneObjects[i].hasOwnProperty("lambert")) {
+            sceneObjects[i]["active"] = sceneObjects[i]["lambert"];
+            sceneObjects[i]["mesh"].material = sceneObjects[i]["lambert"];
+        }
+    }
+}
+
+function onWKeyDown() { // W key - change to Phon material
+    for (var i = 0; i < sceneObjects.length; i++) {
+        sceneObjects[i]["active"].wireframe = false;
+        if(sceneObjects[i].hasOwnProperty("phong")) {
+            sceneObjects[i]["active"] = sceneObjects[i]["phong"];
+            sceneObjects[i]["mesh"].material = sceneObjects[i]["phong"];
+        }
+    }
+}
+
+function onEKeyDown() { // E key - change to cartoon material
+    for (var i = 0; i < sceneObjects.length; i++) {
+        sceneObjects[i]["active"].wireframe = false;
+        if(sceneObjects[i].hasOwnProperty("cartoon")) {
+            sceneObjects[i]["active"] = sceneObjects[i]["cartoon"];
+            sceneObjects[i]["mesh"].material = sceneObjects[i]["cartoon"];
+        }
+    }
 }
 
 function onPKeyDown() { // P key - turn on/off point light
@@ -215,7 +246,7 @@ function plane() {
     );
     grassScene.add(grassCamera);
 
-    addExtra(grass, numberOfFlowers, flowerRadius, flowerColors, grassScene, grassMesh);
+    addExtra(grass, numberOfFlowers, flowerRadius, flowerColors, grassScene, grassMesh, PLANE_SIZE);
     createPlane();
 }
 
@@ -236,7 +267,7 @@ function sky() {
     );
     skyScene.add(skyCamera);
 
-    addExtra(skyVar, numberOfStars, starRadius, [WHITE], skyScene, skyMesh);
+    addExtra(skyVar, numberOfStars, starRadius, [WHITE], skyScene, skyMesh, DOME_SIZE);
     createSkyDome();
 }
 
@@ -268,17 +299,17 @@ function generateTexture(obj, newScene, newTexture, colors, textureSize) {
 }
 
 // add stars or flowers
-function addExtra(obj, numObjects, radius, colors, scene, meshArray) {
+function addExtra(obj, numObjects, radius, colors, scene, meshArray, size) {
     'use strict';
 
     for (let i = 0; i < numObjects; i++) {
-        let newObject = new THREE.SphereGeometry(radius, 32, 32);
+        let newObject = new THREE.SphereGeometry(radius, 10, 10);
         let newObjectMaterial = new THREE.MeshBasicMaterial(
             {color: colors[Math.floor(Math.random() * colors.length)]}
         );
         let newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
 
-        newObjectMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
+        newObjectMesh.position.set(Math.random() * (size - radius), 0, Math.random() * (size - radius));
 
         obj.add(newObjectMesh);
         scene.add(newObjectMesh);
@@ -366,7 +397,7 @@ function createPlane() {
     const plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -Math.PI / 2; // make it horizontal
     scene.add(plane);
-    materials.push(material);
+    sceneObjects.push({"active": material});
 }
 
 function createSkyDome() {
@@ -380,7 +411,7 @@ function createSkyDome() {
     skyDome = new THREE.Mesh(geometry, material);
     skyDome.position.set(0, 0, 0);
     scene.add(skyDome);
-    materials.push(material);
+    sceneObjects.push({"active": material});
 }
 
 function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degree, color) {
@@ -400,24 +431,34 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
       default:
         break;
     }
-    let material = new THREE.MeshStandardMaterial({color: color, wireframe: false});
-    let cylinder = new THREE.Mesh(geometry, material);
+    let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
+    let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
+    let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+    let cylinder = new THREE.Mesh(geometry, lambertMaterial);
 
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
-    materials.push(material);
+    sceneObjects.push({
+        "mesh": cylinder, "active": lambertMaterial, 
+        "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
+    });
 }
 
 function addSphere(obj, x, y, z, radius, color) {
     'use strict';
 
     let geometry = new THREE.SphereGeometry(radius, 32, 32);
-    let material = new THREE.MeshStandardMaterial({color: color, wireframe: false});
-    let sphere = new THREE.Mesh(geometry, material);
+    let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
+    let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
+    let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+    let sphere = new THREE.Mesh(geometry, lambertMaterial);
 
     sphere.position.set(x, y, z);
     obj.add(sphere);
-    materials.push(material);
+    sceneObjects.push( {
+        "mesh": sphere, "active": lambertMaterial, 
+        "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
+    });
 }
 
 function addElipse(obj, x, y, z, xScale, yScale, zScale, color) {
@@ -502,11 +543,16 @@ function addGeometry(obj, x, y, z, vertices, indexs, color) {
     bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     bufferTexture.setIndex(indexs);
     bufferTexture.computeVertexNormals();
-    let material = new THREE.MeshStandardMaterial({color: color, wireframe: false});
-    let mesh = new THREE.Mesh(bufferTexture, material);
+    let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
+    let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
+    let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+    let mesh = new THREE.Mesh(bufferTexture, lambertMaterial);
 
     mesh.position.set(x, y, z);
-    materials.push(material);
+    sceneObjects.push( {
+        "mesh": mesh, "active": lambertMaterial, 
+        "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
+    });
     geometry.add(mesh);
     obj.add(geometry);
 }
@@ -609,7 +655,7 @@ function addMoon(x, y, z) {
     });
     moon = new THREE.Mesh(geometry, material);
 
-    materials.push(material);
+    sceneObjects.push({"active": material});
     moon.position.set(x, y, z);
     scene.add(moon);
 }
@@ -704,7 +750,16 @@ function onKeyDown(e) {
             keys[50] = on2KeyDown;
             break;
 
-        // regular keys: change lights
+        // regular keys: change lights and materials
+        case 81: // Q
+            keys[81] = onQKeyDown;
+            break;
+        case 87: // W
+            keys[87] = onWKeyDown;
+            break;
+        case 69: // E
+            keys[69] = onEKeyDown;
+            break;
         case 80: // P
             keys[80] = onPKeyDown;
             break;
@@ -714,6 +769,7 @@ function onKeyDown(e) {
         case 68: // D
             keys[68] = onDKeyDown;
             break;
+
 
         // case arrow keys: move ovni
         case 37: // left arrow
