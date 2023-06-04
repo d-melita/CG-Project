@@ -13,18 +13,18 @@
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, scene, renderer, controls, perspective_camera;
-var skyVar, skyScene, skyTexture, skyCamera;
-var grass, grassScene, grassTexture, grassCamera;
+let camera, scene, renderer, controls, perspective_camera;
+let skyVar, skyScene, skyTexture, skyCamera;
+let grass, grassScene, grassTexture, grassCamera;
 
-var axesHelper;
-var house, ovni, moon, tree, skyDome;
+let axesHelper;
+let house, ovni, moon, tree, skyDome;
 
-var ambientLight, spotLight, moonDirectionalLight;
-var pointLights = [];
-var materials = [];
-var grassMesh = [];
-var skyMesh = [];
+let ambientLight, spotLight, directionalLight;
+let pointLights = [];
+let materials = [];
+let grassMesh = [];
+let skyMesh = [];
 
 const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), RED = new THREE.Color(0xff0000), DARK_RED = new THREE.Color(0x960909), GREY = new THREE.Color(0x909090), BROWN = new THREE.Color(0x9c4f0c), GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
 
@@ -33,7 +33,8 @@ const grassColors = [GREEN, GREEN, GREEN, GREEN];
 const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.01, flowerRadius = 0.05;
 
-const OVNI_HEIGHT = 30;
+const PLANE_SIZE = 20, DOME_SIZE = 20;
+const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
 const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
 const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 10;
@@ -41,17 +42,17 @@ var trees = [];
 
 const standardScale = 1;
 const cockpitRadius = 2, ovniCockpitY = 1.5;
-const ovniBodyRadius = 1, onviBodyScaleX = 6, ovniBodyScaleY = 1.5, ovniBodyScaleZ = 6;
+const onviBodyScaleX = 6, ovniBodyScaleY = 1.5, ovniBodyScaleZ = 6;
 const ovniBaseRadius = 2, ovniBaseHeight = 2, ovniBaseY = -1.5;
 const onviLightsX = 4, ovniLightsRadius = 1, onviLightsY = -0.5; //ovniLightsY = 2-1-1.5;
 
-var movementVector = new THREE.Vector3(0, 0, 0);
+let movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
 
-var clock = new THREE.Clock();
-var elapsedTime;
+let clock = new THREE.Clock();
+let elapsedTime;
 
-var keys = {};
+let keys = {};
 
 ////////////////////////////////
 /* INITIALIZE ANIMATION CYCLE */
@@ -86,14 +87,14 @@ function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
 function on1KeyDown() { // 1 key
     for (var i = 0; i < grassMesh.length; i++) {
-        grassMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
+        grassMesh[i].position.set(Math.random() * PLANE_SIZE, 0, Math.random() * PLANE_SIZE);
     }
     delete keys[49];
 }
 
 function on2KeyDown() { // 2 key
     for (var i = 0; i < skyMesh.length; i++) {
-        skyMesh[i].position.set(Math.random() * 20, 0, Math.random() * 20);
+        skyMesh[i].position.set(Math.random() * DOME_SIZE, 0, Math.random() * DOME_SIZE);
     }
     delete keys[50];
 }
@@ -123,7 +124,7 @@ function onSKeyDown() { // S key - turn on/off spot light
 }
 
 function onDKeyDown() { // D key - turn on/off moondirectional light
-    moonDirectionalLight.visible = !moonDirectionalLight.visible;
+    directionalLight.visible = !directionalLight.visible;
     delete keys[68];
 }
 
@@ -135,10 +136,7 @@ function update(){
     for (const [key, val] of Object.entries(keys))
         val.call();
 
-    for (const [key, val] of Object.entries(keys))
-        val.call();
-
-    ovni.rotateY(0.05);
+    ovni.rotateY(OVNI_ROTATION_SPEED);
     ovni.position.add(movementVector);
     spotLight.target.position.set(ovni.position.x, 0, ovni.position.z);
 }
@@ -149,12 +147,13 @@ function update(){
 
 function render() {
     'use strict';
+
     renderer.setRenderTarget(grassTexture);
-    renderer.render(grassScene, grassCamera);
+    renderer.render(grassScene, grassCamera, grassTexture);
     renderer.setRenderTarget(null);
 
     renderer.setRenderTarget(skyTexture);
-    renderer.render(skyScene, skyCamera);
+    renderer.render(skyScene, skyCamera, skyTexture);
     renderer.setRenderTarget(null);
 
     //renderer.render(skyScene, skyCamera);
@@ -183,11 +182,16 @@ function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
+
     axesHelper = new THREE.AxesHelper(20);
     scene.add(axesHelper);
+
     plane();
     sky();
+
     createAmbientLight();
+    createDirectionalLight();
+
     addHouse(0, HOUSE_Y, 0);
     addOVNI(0, OVNI_HEIGHT, 0);
     addMoon(0, MOON_HEIGHT, MOON_Z);
@@ -198,9 +202,19 @@ function plane() {
     'use strict';
 
     grassScene = new THREE.Scene();
-    grassTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
+    grassTexture = new THREE.WebGLRenderTarget(
+        window.innerWidth, window.innerHeight, 
+        { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
+    );
 
-    generateTexture(grass, grassScene, grassTexture, grassColors);
+    generateTexture(grass, grassScene, grassTexture, grassColors, PLANE_SIZE);
+
+    grassCamera = getPerspectiveCamera(
+        25, grassTexture.width / grassTexture.height, 0.1, 1000000, 
+        10, 20, 10, 10, 0, 10
+    );
+    grassScene.add(grassCamera);
+
     createPlane();
 }
 
@@ -208,22 +222,40 @@ function sky() {
     'use strict';
 
     skyScene = new THREE.Scene();
-    skyTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
+    skyTexture = new THREE.WebGLRenderTarget(
+        window.innerWidth, window.innerHeight, 
+        { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
+    );
 
-    generateTexture(skyVar, skyScene, skyTexture, skyColors);
+    generateTexture(skyVar, skyScene, skyTexture, skyColors, DOME_SIZE);
+
+    skyCamera = getPerspectiveCamera(
+        25, skyTexture.width / skyTexture.height, 0.1, 1000000, 
+        10, 20, 10, 10, 0, 10
+    );
+    skyScene.add(skyCamera);
+
     createSkyDome();
 }
 
-function generateTexture(obj, newScene, newTexture, colors) {
+// TODO: fix this
+function generateTexture(obj, newScene, newTexture, colors, textureSize) {
 
     const geometry = new THREE.BufferGeometry();
-    const positions = [0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0].map((n) => n  * 20);
-    const indices = [0, 1, 2, 2, 3, 0];
+    const positions = [
+        0, 0, 0, 
+        0, 0, 1, 
+        1, 0, 1, 
+        1, 0, 0
+    ].map((n) => n*textureSize);
+    const indices = [
+        0, 1, 2, 
+        2, 3, 0
+    ];
     colors = colors.flatMap((color) => [color.r, color.g, color.b,]);
   
     geometry.setIndex(indices);
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    geometry.computeVertexNormals();
     geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   
     const material = new THREE.MeshBasicMaterial({vertexColors: true,});
@@ -232,28 +264,27 @@ function generateTexture(obj, newScene, newTexture, colors) {
     obj.position.set(0, 0, 0);
     newScene.add(obj);
 
-    let newCamera = getPerspectiveCamera(25, newTexture.width / newTexture.height, 0.1, 1000000, obj.position.x+10, obj.position.y+20, obj.position.z+10, 10, 0, 10);
 
     // weird if statement, doesnt work if I set an argument called camera - it works tho
     if (newScene == grassScene) {
-        grassCamera = newCamera;
-        newScene.add(grassCamera);
         addExtra(obj, numberOfFlowers, flowerRadius, flowerColors, newScene, grassMesh);
     }
     else if (newScene == skyScene) {
-        skyCamera = newCamera;
-        newScene.add(skyCamera);
         addExtra(obj, numberOfStars, starRadius, [WHITE], newScene, skyMesh);
     }
 }
 
-function addExtra(obj, numObjects, radius, colors, scene, meshArray) { // add stars or flowers
+// add stars or flowers
+function addExtra(obj, numObjects, radius, colors, scene, meshArray) {
     'use strict';
 
     for (let i = 0; i < numObjects; i++) {
-        var newObject = new THREE.SphereGeometry(radius, 32); 
-        var newObjectMaterial = new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random() * colors.length)]});
-        var newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
+        let newObject = new THREE.SphereGeometry(radius, 32, 32);
+        let newObjectMaterial = new THREE.MeshBasicMaterial(
+            {color: colors[Math.floor(Math.random() * colors.length)]}
+        );
+        let newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
+
         newObjectMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
         obj.add(newObjectMesh);
         scene.add(newObjectMesh);
@@ -267,7 +298,9 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray) { // add st
 
 function createCamera() {
     'use strict';
-    camera = getPerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000000, 40, 40, 40, 0, 0, 0);
+    camera = getPerspectiveCamera(
+        75, window.innerWidth / window.innerHeight, 0.1, 1000000, 40, 40, 40, 0, 0, 0
+    );
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.update();
@@ -292,34 +325,28 @@ function createAmbientLight() {
     scene.add(ambientLight);
 }
 
-function createDirectionalLight(obj) {
+function createDirectionalLight() {
     'use strict';
-    // add directional light to moon
-    moonDirectionalLight = new THREE.DirectionalLight(YELLOW, 0.8);
-    moonDirectionalLight.position.set(0, 0, 0);
-    moonDirectionalLight.target.position.set(0, 0, 0);
-    obj.add(moonDirectionalLight);
+    directionalLight = new THREE.DirectionalLight(WHITE, 0.8);
+    directionalLight.position.set(1, 1, 0);
+    scene.add(directionalLight);
 }
 
-function createSpotLight(obj, x, y, z) {
+function createSpotLight(obj) {
     'use strict';
 
-    // add spot light to ovni
-    spotLight = new THREE.SpotLight(0xffffff, 1, 100, 0.5, 1);
-    spotLight.position.set(x, y, z);
+    spotLight = new THREE.SpotLight(WHITE, 1, 100, 0.5, 1);
     obj.add(spotLight);
-    var spotLightTarget = new THREE.Object3D();
-    spotLightTarget.position.set(obj.position.x, 0, obj.position.z);
+
+    let spotLightTarget = new THREE.Object3D(obj.position.x, 0, obj.position.z);
     spotLight.target = spotLightTarget;
-    obj.add(spotLightTarget);
     scene.add(spotLightTarget);
 }
 
-function createPontualLight(obj, x, y, z) {
+function createPointLight(obj) {
     'use strict';
 
-    const light = new THREE.PointLight(0xffffff, 1, 30);
-    light.position.set(x, y, z);
+    const light = new THREE.PointLight(WHITE, 1, 30);
     obj.add(light);
     pointLights.push(light);
 }
@@ -351,8 +378,8 @@ function createPlane() {
 function createSkyDome() {
     'use strict';
 
-    var geometry = new THREE.SphereGeometry(100, 32, 32);
-    var material = new THREE.MeshBasicMaterial({
+    let geometry = new THREE.SphereGeometry(100, 32, 32);
+    let material = new THREE.MeshBasicMaterial({
         map: skyTexture.texture,
         side: THREE.BackSide
     });
@@ -365,7 +392,7 @@ function createSkyDome() {
 function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degree, color) {
     'use strict';
 
-    var geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
+    let geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
     switch (rotation_axis) {
       case 'x':
         geometry.rotateX(rotation_degree);
@@ -379,43 +406,48 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
       default:
         break;
     }
-    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
-    var cylinder = new THREE.Mesh(geometry, material);
+    let material = new THREE.MeshStandardMaterial({color: color, wireframe: false});
+    let cylinder = new THREE.Mesh(geometry, material);
 
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
     materials.push(material);
 }
 
-function addElipse(obj, x, y, z, radius, color, xScale, yScale, zScale) {
+function addSphere(obj, x, y, z, radius, color) {
     'use strict';
 
-    var geometry = new THREE.SphereGeometry(radius, 32, 32);
-    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
-    var sphere = new THREE.Mesh(geometry, material);
+    let geometry = new THREE.SphereGeometry(radius, 32, 32);
+    let material = new THREE.MeshStandardMaterial({color: color, wireframe: false});
+    let sphere = new THREE.Mesh(geometry, material);
 
     sphere.position.set(x, y, z);
-    obj.scale.set(xScale, yScale, zScale);
     obj.add(sphere);
     materials.push(material);
+}
+
+function addElipse(obj, x, y, z, xScale, yScale, zScale, color) {
+    'use strict';
+
+    addSphere(obj, x, y, z, 1, color);
+    obj.scale.set(xScale, yScale, zScale);
 }
 
 function addCockpit(obj, x, y, z) {
     'use strict';
 
-    var cockpit = new THREE.Object3D();
-    addElipse(cockpit, 0, 0, 0, cockpitRadius, WHITE, standardScale, standardScale, standardScale);
+    let cockpit = new THREE.Object3D();
+    addSphere(cockpit, 0, 0, 0, cockpitRadius, WHITE);
 
     cockpit.position.set(x, y, z);
     obj.add(cockpit);
-
 }
 
 function addBody(obj, x, y, z) {
     'use strict';
 
-    var body = new THREE.Object3D();
-    addElipse(body, 0, 0, 0, ovniBodyRadius, BLACK, onviBodyScaleX, ovniBodyScaleY, ovniBodyScaleZ); // main body
+    let body = new THREE.Object3D();
+    addElipse(body, 0, 0, 0, onviBodyScaleX, ovniBodyScaleY, ovniBodyScaleZ, BLACK); // main body
 
     body.position.set(x, y, z);
     obj.add(body);
@@ -425,9 +457,11 @@ function addBody(obj, x, y, z) {
 function addBase(obj, x, y, z) {
     'use strict';
 
-    var base = new THREE.Object3D();
+    let base = new THREE.Object3D();
 
     addCylinder(base, 0, 0, 0, ovniBaseRadius, ovniBaseHeight, '', 0, WHITE);
+    createSpotLight(base);
+
     base.position.set(x, y, z);
     obj.add(base);
 }
@@ -435,16 +469,18 @@ function addBase(obj, x, y, z) {
 function addLights(obj, x, y, z) {
     'use strict';
 
-    var rotation = Math.PI/4
+    const NUMBER_LIGHTS = 8;
 
-    for (var i = 0; i < 8; i++){
-        var light = new THREE.Object3D();
+    let rotation = (2*Math.PI)/NUMBER_LIGHTS;
 
-        addElipse(light, onviLightsX, 0, 0, ovniLightsRadius, BLUE, standardScale, standardScale, standardScale);
+    for (var i = 0; i < NUMBER_LIGHTS; i++){
+        let light = new THREE.Object3D();
+
+        addSphere(light, onviLightsX, 0, 0, ovniLightsRadius, BLUE);
+        createPointLight(light);
 
         light.rotateY(rotation*i);
         light.position.set(x, y, z);
-        createPontualLight(light, 0, 0, 0);
         obj.add(light);
     }
 }
@@ -460,7 +496,6 @@ function addOVNI(x, y, z) {
     addLights(ovni, 0, onviLightsY, 0);
 
     ovni.position.set(x, y, z);
-    createSpotLight(ovni, 0, 0, 0);
     scene.add(ovni);
 }
 
@@ -468,15 +503,14 @@ function addOVNI(x, y, z) {
 function addGeometry(obj, x, y, z, vertices, indexs, color) {
     'use strict';
     
-    var geometry = new THREE.Object3D();
-    var bufferTexture = new THREE.BufferGeometry();
-    
+    let geometry = new THREE.Object3D();
+    let bufferTexture = new THREE.BufferGeometry();
     bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
     bufferTexture.setIndex(indexs);
     bufferTexture.computeVertexNormals();
-    let material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+    let material = new THREE.MeshStandardMaterial({color: color, wireframe: false});
     let mesh = new THREE.Mesh(bufferTexture, material);
+
     mesh.position.set(x, y, z);
     materials.push(material);
     geometry.add(mesh);
@@ -487,7 +521,8 @@ function addHouse(x, y, z) {
     'use strict';
     // create house using polygon mesh
     house = new THREE.Object3D();
-    var verticesWalls = [
+
+    let verticesWalls = [
         0, 0, 0,
         0, 0, 16,
         6, 0, 0,
@@ -497,47 +532,63 @@ function addHouse(x, y, z) {
         6, 8, 0,
         6, 8, 16,
         // door
-        6, 0, 4,
-        6, 0, 6,
-        6, 4, 4,
-        6, 4, 6,
+        6, 0, 3,
+        6, 0, 5,
+        6, 4, 3,
+        6, 4, 5,
         // window 1
         6, 3, 7,
         6, 3, 9,
         6, 6, 7,
         6, 6, 9,
         // window 2
-        6, 3, 13,
-        6, 3, 15,
-        6, 6, 13,
-        6, 6, 15,
+        6, 3, 12,
+        6, 3, 14,
+        6, 6, 12,
+        6, 6, 14,
     ];
     const indexsWalls = [
-        0, 1, 2, 2, 3, 1,
-        0, 1, 5, 0, 5, 4,
-        0, 4, 6, 0, 6, 2,
-        1, 3, 7, 1, 7, 5,
-        6, 10, 2, 10, 8, 2,
-        11, 10, 14, 11, 14, 12,
-        9, 11, 12, 14, 10, 6,
-        15, 14, 6, 7, 15, 6,
-        18, 15, 7, 7, 19, 18,
-        7, 3, 19, 3, 17, 19,
-        3, 16, 17, 3, 9, 16,
-        9, 13, 16, 9, 12, 13,
-        16, 13, 15, 16, 15, 18
+        0, 1, 2,
+        2, 3, 1,
+        0, 1, 5,
+        0, 5, 4,
+        0, 4, 6,
+        0, 6, 2,
+        1, 3, 7,
+        1, 7, 5,
+        6, 10, 2,
+        10, 8, 2,
+        11, 10, 14,
+        11, 14, 12,
+        9, 11, 12,
+        14, 10, 6,
+        15, 14, 6,
+        7, 15, 6,
+        18, 15, 7,
+        7, 19, 18,
+        7, 3, 19,
+        3, 17, 19,
+        3, 16, 17,
+        3, 9, 16,
+        9, 13, 16,
+        9, 12, 13,
+        16, 13, 15, 
+        16, 15, 18
     ];
 
     const doorWindowsIndexs = [
-        9, 8, 10, 9, 10, 11,
-        13, 12, 14, 13, 14, 15,
-        17, 16, 18, 17, 18, 19
+        9, 8, 10,
+        9, 10, 11,
+        13, 12, 14,
+        13, 14, 15,
+        17, 16, 18, 
+        17, 18, 19
     ]
 
     addGeometry(house, 0, 0, 0, verticesWalls, indexsWalls, WHITE);
     addGeometry(house, 0, 0, 0, verticesWalls, doorWindowsIndexs, BLUE);
 
-    var verticesRoof = [
+    let verticesRoof = [
         0, 8, 0,
         0, 8, 16,
         6, 8, 0,
@@ -558,23 +609,22 @@ function addHouse(x, y, z) {
 function addMoon(x, y, z) {
     'use strict';
 
-    moon = new THREE.Object3D();
-    var geometry = new THREE.SphereGeometry(MOON_RADIUS, 32, 32);
-    var material = new THREE.MeshStandardMaterial({color: YELLOW, wireframe: false, emissive: YELLOW, emissiveIntensity: 0.5});
-    var sphere = new THREE.Mesh(geometry, material);
-    sphere.position.set(0, 0, 0);
-    moon.add(sphere);
+    let geometry = new THREE.SphereGeometry(MOON_RADIUS, 32, 32);
+    let material = new THREE.MeshStandardMaterial({
+        color: YELLOW, wireframe: false, emissive: YELLOW, emissiveIntensity: 0.8
+    });
+    moon = new THREE.Mesh(geometry, material);
+
     materials.push(material);
     moon.position.set(x, y, z);
-    createDirectionalLight(moon);
     scene.add(moon);
 }
 
 function addLeaves(obj, x, y, z) {
     'use strict';
 
-    var leaves = new THREE.Object3D();
-    addElipse(leaves, 0, 0, 0, 1, GREEN, 2, 1, 4);
+    let leaves = new THREE.Object3D();
+    addElipse(leaves, 0, 0, 0, 2, 1, 4, GREEN);
 
     leaves.position.set(x, y, z);
     obj.add(leaves);
@@ -583,29 +633,33 @@ function addLeaves(obj, x, y, z) {
 function addTrunks(obj, x, y, z) {
     'use strict';
 
-    var trunk = new THREE.Object3D();
+    var baseTrunk = new THREE.Object3D();
     var trunk1 = new THREE.Object3D();
     var trunk2 = new THREE.Object3D();
-    var trunks = new THREE.Object3D();
-    addCylinder(trunk, 0, 0, 0, 1, 3, '', 0, BROWN); // base trunk
+    var topTrunks = new THREE.Object3D();
+
+    addCylinder(baseTrunk, 0, 0, 0, 1, 3, '', 0, BROWN);
     addCylinder(trunk1, 0, 3.2, 1.3, 1, 5.2, 'x', Math.PI/4, BROWN);
     addCylinder(trunk2, 0, 4.2, -2, 1, 7, 'x', -Math.PI/4, BROWN);
     addLeaves(trunk1, 0, 5, 3);
     addLeaves(trunk2, 0, 7, -4);
-    trunks.add(trunk1);
-    trunks.add(trunk2);
-    trunks.rotateY(Math.random()*Math.PI*2);
-    trunk.add(trunks);
 
-    trunk.position.set(x, y, z);
-    obj.add(trunk);
+    topTrunks.add(trunk1);
+    topTrunks.add(trunk2);
+    topTrunks.rotateY(Math.random()*Math.PI*2);
+    baseTrunk.add(topTrunks);
+
+    baseTrunk.position.set(x, y, z);
+    obj.add(baseTrunk);
 }
 
 function addTree(x, y, z, size) {
     'use strict';
 
     tree = new THREE.Object3D();
+
     addTrunks(tree, 0, 0, 0, size);
+
     tree.scale.set(1, size, 1);
     tree.position.set(x, y, z);
     scene.add(tree);
@@ -623,10 +677,6 @@ function addTrees() {
     }
     // TODO check if trees colide with each other, with the house and if they are to close to the border
 }
-
-//////////////////////
-/* CHECK COLLISIONS */
-//////////////////////
 
 ////////////////////////////
 /* RESIZE WINDOW CALLBACK */
