@@ -36,7 +36,7 @@ const flowerColors = [WHITE, ORANGE, RED, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.01, flowerRadius = 0.05;
 
 const OVNI_HEIGHT = 30;
-const MOON_HEIGHT = 35, MOON_Z = 15, MOON_RADIUS = 4;
+const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
 const TREE_Y = 5.5, TREE_Z = 30;
 
