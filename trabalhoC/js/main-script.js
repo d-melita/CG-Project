@@ -33,6 +33,7 @@ const BROWN = 0x9c4f0c, GREEN = new THREE.Color(0x07820d), ORANGE = 0xfc5203, PU
 const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
 const grassColors = [GREEN, GREEN, GREEN, GREEN];
 const flowerColors = [WHITE, ORANGE, RED, BLUE];
+const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.01, flowerRadius = 0.05;
 
 const OVNI_HEIGHT = 30;
 const MOON_HEIGHT = 35, MOON_Z = 15, MOON_RADIUS = 4;
@@ -240,12 +241,12 @@ function generateTexture(obj, newScene, newTexture, colors) {
     if (newScene == grassScene) {
         grassCamera = newCamera;
         newScene.add(grassCamera);
-        addExtra(obj, 100, 0.1, flowerColors, newScene, grassMesh);
+        addExtra(obj, numberOfFlowers, flowerRadius, flowerColors, newScene, grassMesh);
     }
     else if (newScene == skyScene) {
         skyCamera = newCamera;
         newScene.add(skyCamera);
-        addExtra(obj, 500, 0.01, [WHITE], newScene, skyMesh);
+        addExtra(obj, numberOfStars, starRadius, [WHITE], newScene, skyMesh);
     }
 }
 
