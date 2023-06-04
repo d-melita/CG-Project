@@ -122,7 +122,7 @@ function onQKeyDown() { // Q key - change to Lambert material
     }
 }
 
-function onWKeyDown() { // W key - change to Phon material
+function onWKeyDown() { // W key - change to Phong material
     for (var i = 0; i < sceneObjects.length; i++) {
         sceneObjects[i]["active"].wireframe = false;
         if(sceneObjects[i].hasOwnProperty("phong")) {
@@ -138,6 +138,16 @@ function onEKeyDown() { // E key - change to cartoon material
         if(sceneObjects[i].hasOwnProperty("cartoon")) {
             sceneObjects[i]["active"] = sceneObjects[i]["cartoon"];
             sceneObjects[i]["mesh"].material = sceneObjects[i]["cartoon"];
+        }
+    }
+}
+
+function onEKeyDown() { // E key - change to basic material - turn off illumination
+    for (var i = 0; i < sceneObjects.length; i++) {
+        sceneObjects[i]["active"].wireframe = false;
+        if(sceneObjects[i].hasOwnProperty("basic")) {
+            sceneObjects[i]["active"] = sceneObjects[i]["basic"];
+            sceneObjects[i]["mesh"].material = sceneObjects[i]["basic"];
         }
     }
 }
@@ -431,6 +441,7 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
       default:
         break;
     }
+    let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
     let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
     let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
     let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
@@ -439,7 +450,7 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
     sceneObjects.push({
-        "mesh": cylinder, "active": lambertMaterial, 
+        "mesh": cylinder, "active": lambertMaterial, "basic": basicMaterial,
         "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
     });
 }
@@ -448,6 +459,7 @@ function addSphere(obj, x, y, z, radius, color) {
     'use strict';
 
     let geometry = new THREE.SphereGeometry(radius, 32, 32);
+    let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
     let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
     let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
     let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
@@ -456,7 +468,7 @@ function addSphere(obj, x, y, z, radius, color) {
     sphere.position.set(x, y, z);
     obj.add(sphere);
     sceneObjects.push( {
-        "mesh": sphere, "active": lambertMaterial, 
+        "mesh": sphere, "active": lambertMaterial, "basic": basicMaterial,
         "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
     });
 }
@@ -543,6 +555,7 @@ function addGeometry(obj, x, y, z, vertices, indexs, color) {
     bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     bufferTexture.setIndex(indexs);
     bufferTexture.computeVertexNormals();
+    let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
     let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
     let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
     let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
@@ -550,7 +563,7 @@ function addGeometry(obj, x, y, z, vertices, indexs, color) {
 
     mesh.position.set(x, y, z);
     sceneObjects.push( {
-        "mesh": mesh, "active": lambertMaterial, 
+        "mesh": mesh, "active": lambertMaterial, "basic": basicMaterial,
         "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
     });
     geometry.add(mesh);
@@ -759,6 +772,9 @@ function onKeyDown(e) {
             break;
         case 69: // E
             keys[69] = onEKeyDown;
+            break;
+        case 82: // R
+            keys[82] = onRKeyDown;
             break;
         case 80: // P
             keys[80] = onPKeyDown;
