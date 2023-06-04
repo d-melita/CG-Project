@@ -207,7 +207,7 @@ function plane() {
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
-    generateTexture(grass, grassScene, grassTexture, grassColors, PLANE_SIZE);
+    grass = generateTexture(grass, grassScene, grassTexture, grassColors, PLANE_SIZE);
 
     grassCamera = getPerspectiveCamera(
         25, grassTexture.width / grassTexture.height, 0.1, 1000000, 
@@ -215,6 +215,7 @@ function plane() {
     );
     grassScene.add(grassCamera);
 
+    addExtra(grass, numberOfFlowers, flowerRadius, flowerColors, grassScene, grassMesh);
     createPlane();
 }
 
@@ -227,7 +228,7 @@ function sky() {
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
-    generateTexture(skyVar, skyScene, skyTexture, skyColors, DOME_SIZE);
+    skyVar = generateTexture(skyVar, skyScene, skyTexture, skyColors, DOME_SIZE);
 
     skyCamera = getPerspectiveCamera(
         25, skyTexture.width / skyTexture.height, 0.1, 1000000, 
@@ -235,10 +236,10 @@ function sky() {
     );
     skyScene.add(skyCamera);
 
+    addExtra(skyVar, numberOfStars, starRadius, [WHITE], skyScene, skyMesh);
     createSkyDome();
 }
 
-// TODO: fix this
 function generateTexture(obj, newScene, newTexture, colors, textureSize) {
 
     const geometry = new THREE.BufferGeometry();
@@ -261,17 +262,9 @@ function generateTexture(obj, newScene, newTexture, colors, textureSize) {
     const material = new THREE.MeshBasicMaterial({vertexColors: true,});
   
     obj = new THREE.Mesh(geometry, material);
-    obj.position.set(0, 0, 0);
     newScene.add(obj);
 
-
-    // weird if statement, doesnt work if I set an argument called camera - it works tho
-    if (newScene == grassScene) {
-        addExtra(obj, numberOfFlowers, flowerRadius, flowerColors, newScene, grassMesh);
-    }
-    else if (newScene == skyScene) {
-        addExtra(obj, numberOfStars, starRadius, [WHITE], newScene, skyMesh);
-    }
+    return obj;
 }
 
 // add stars or flowers
@@ -286,6 +279,7 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray) {
         let newObjectMesh = new THREE.Mesh(newObject, newObjectMaterial);
 
         newObjectMesh.position.set(Math.random() * 20, 0, Math.random() * 20);
+
         obj.add(newObjectMesh);
         scene.add(newObjectMesh);
         meshArray.push(newObjectMesh);
