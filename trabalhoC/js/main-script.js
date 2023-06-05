@@ -26,6 +26,9 @@ let sceneObjects = [];
 let grassMesh = [];
 let skyMesh = [];
 
+let grassUpdate = false;
+let skyUpdate = false;
+
 const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), RED = new THREE.Color(0xff0000), DARK_RED = new THREE.Color(0x960909), GREY = new THREE.Color(0x909090), BROWN = new THREE.Color(0x9c4f0c), GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
 const MATERIAL = 0;
 
@@ -38,7 +41,7 @@ const PLANE_SIZE = 20, DOME_SIZE = 20;
 const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
 const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
-const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 10;
+const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 4;
 var trees = [];
 
 const standardScale = 1;
@@ -87,16 +90,12 @@ function onUpKeyDown() { movementVector.z += MOVEMENT_SPEED * elapsedTime; }
 function onDownKeyDown() { movementVector.z -= MOVEMENT_SPEED * elapsedTime; }
 
 function on1KeyDown() { // 1 key
-    for (var i = 0; i < grassMesh.length; i++) {
-        grassMesh[i].position.set(Math.random() * PLANE_SIZE, 0, Math.random() * PLANE_SIZE);
-    }
+    grassUpdate = true;
     delete keys[49];
 }
 
 function on2KeyDown() { // 2 key
-    for (var i = 0; i < skyMesh.length; i++) {
-        skyMesh[i].position.set(Math.random() * DOME_SIZE, 0, Math.random() * DOME_SIZE);
-    }
+    skyUpdate = true;
     delete keys[50];
 }
 
@@ -180,6 +179,32 @@ function update(){
     ovni.rotateY(OVNI_ROTATION_SPEED);
     ovni.position.add(movementVector);
     spotLight.target.position.set(ovni.position.x, 0, ovni.position.z);
+
+    if (grassUpdate) {
+        updateTexture(grassMesh);
+        renderTarget(grassTexture, grassScene, grassCamera);
+        grassUpdate = false;
+    }
+
+    if (skyUpdate) {
+        updateTexture(skyMesh);
+        renderTarget(skyTexture, skyScene, skyCamera);
+        skyUpdate = false;
+    }
+}
+
+function updateTexture(desiredMesh) {
+    'use strict';
+    for (let i = 0; i < desiredMesh.length; i++) {
+        desiredMesh[i].position.set(Math.random() * PLANE_SIZE, 0, Math.random() * PLANE_SIZE);
+    }
+}
+
+function renderTarget(desiredTexture, desiredScene, desiredCamera) {
+    'use strict';
+    renderer.setRenderTarget(desiredTexture);
+    renderer.render(desiredScene, desiredCamera, desiredTexture);
+    renderer.setRenderTarget(null);
 }
 
 /////////////
@@ -188,14 +213,6 @@ function update(){
 
 function render() {
     'use strict';
-
-    renderer.setRenderTarget(grassTexture);
-    renderer.render(grassScene, grassCamera, grassTexture);
-    renderer.setRenderTarget(null);
-
-    renderer.setRenderTarget(skyTexture);
-    renderer.render(skyScene, skyCamera, skyTexture);
-    renderer.setRenderTarget(null);
 
     //renderer.render(skyScene, skyCamera);
     //renderer.render(grassScene, grassCamera);
@@ -258,6 +275,7 @@ function plane() {
 
     addExtra(grass, numberOfFlowers, flowerRadius, flowerColors, grassScene, grassMesh, PLANE_SIZE);
     createPlane();
+    renderTarget(grassTexture, grassScene, grassCamera);
 }
 
 function sky() {
@@ -279,6 +297,7 @@ function sky() {
 
     addExtra(skyVar, numberOfStars, starRadius, [WHITE], skyScene, skyMesh, DOME_SIZE);
     createSkyDome();
+    renderTarget(skyTexture, skyScene, skyCamera);
 }
 
 function generateTexture(obj, newScene, newTexture, colors, textureSize) {
