@@ -262,7 +262,7 @@ function plane() {
 
     grassScene = new THREE.Scene();
     grassTexture = new THREE.WebGLRenderTarget(
-        window.innerWidth, window.innerHeight, 
+        window.innerWidth*4, window.innerHeight*4, 
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
@@ -281,7 +281,7 @@ function sky() {
 
     skyScene = new THREE.Scene();
     skyTexture = new THREE.WebGLRenderTarget(
-        window.innerWidth, window.innerHeight, 
+        window.innerWidth*4, window.innerHeight*4, 
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
