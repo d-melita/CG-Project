@@ -29,15 +29,16 @@ let skyMesh = [];
 let grassUpdate = false;
 let skyUpdate = false;
 
+const frustumSize = 50;
 const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), RED = new THREE.Color(0xff0000), DARK_RED = new THREE.Color(0x960909), GREY = new THREE.Color(0x909090), BROWN = new THREE.Color(0x9c4f0c), GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
 const MATERIAL = 0;
 
 const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
 const grassColors = [GREEN, GREEN, GREEN, GREEN];
 const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
-const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.01, flowerRadius = 0.05;
+const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
-const PLANE_SIZE = 20, DOME_SIZE = 20;
+const PLANE_SIZE = 64, DOME_SIZE = 64; // recommendation: power of 2
 const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
 const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
@@ -265,12 +266,9 @@ function plane() {
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
-    grass = generateTexture(grass, grassScene, grassTexture, grassColors, PLANE_SIZE);
+    grass = generateTexture(grass, grassScene, grassColors, PLANE_SIZE);
 
-    grassCamera = getPerspectiveCamera(
-        25, grassTexture.width / grassTexture.height, 0.1, 1000000, 
-        10, 20, 10, 10, 0, 10
-    );
+    grassCamera = getOrthographicCamera(PLANE_SIZE/2, 20, PLANE_SIZE/2, PLANE_SIZE);
     grassScene.add(grassCamera);
 
     addExtra(grass, numberOfFlowers, flowerRadius, flowerColors, grassScene, grassMesh, PLANE_SIZE);
@@ -287,12 +285,9 @@ function sky() {
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
-    skyVar = generateTexture(skyVar, skyScene, skyTexture, skyColors, DOME_SIZE);
+    skyVar = generateTexture(skyVar, skyScene, skyColors, DOME_SIZE);
 
-    skyCamera = getPerspectiveCamera(
-        25, skyTexture.width / skyTexture.height, 0.1, 1000000, 
-        10, 20, 10, 10, 0, 10
-    );
+    skyCamera = getOrthographicCamera(PLANE_SIZE/2, 20, PLANE_SIZE/2, PLANE_SIZE);
     skyScene.add(skyCamera);
 
     addExtra(skyVar, numberOfStars, starRadius, [WHITE], skyScene, skyMesh, DOME_SIZE);
@@ -300,7 +295,7 @@ function sky() {
     renderTarget(skyTexture, skyScene, skyCamera);
 }
 
-function generateTexture(obj, newScene, newTexture, colors, textureSize) {
+function generateTexture(obj, newScene, colors, textureSize) {
 
     const geometry = new THREE.BufferGeometry();
     const positions = [
@@ -332,7 +327,8 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray, size) {
     'use strict';
 
     for (let i = 0; i < numObjects; i++) {
-        let newObject = new THREE.SphereGeometry(radius, 10, 10);
+        let newObject = new THREE.CircleGeometry(radius, 10, 10);
+        newObject.rotateX(-Math.PI / 2);
         let newObjectMaterial = new THREE.MeshBasicMaterial(
             {color: colors[Math.floor(Math.random() * colors.length)]}
         );
@@ -359,22 +355,28 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray, size) {
 
 function createCamera() {
     'use strict';
-    camera = getPerspectiveCamera(
-        75, window.innerWidth / window.innerHeight, 0.1, 1000000, 40, 40, 40, 0, 0, 0
-    );
+    camera = getPerspectiveCamera(40, 40, 40);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.update();
 }
 
-function getPerspectiveCamera(fov, aspect, near, far, x, y, z, lookX, lookY, lookZ) {
+function getPerspectiveCamera(x, y, z) {
     const camera = new THREE.PerspectiveCamera(
-        fov, aspect, near, far
+        75, window.innerWidth / window.innerHeight, 0.1, 1000000
     );
     camera.position.set(x, y, z);
-    camera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
     return camera;
-  }
+}
+
+function getOrthographicCamera(pos_x, pos_y, pos_z, size) {
+    const aspect = size / size;
+    const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
+    camera.position.set(pos_x, pos_y, pos_z);
+    camera.lookAt(new THREE.Vector3(pos_x, 0, pos_z));
+    return camera;
+}
 
 /////////////////////
 /* CREATE LIGHT(S) */
