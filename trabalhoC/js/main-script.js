@@ -142,7 +142,7 @@ function onEKeyDown() { // E key - change to cartoon material
     }
 }
 
-function onEKeyDown() { // E key - change to basic material - turn off illumination
+function onRKeyDown() { // E key - change to basic material - turn off illumination
     for (var i = 0; i < sceneObjects.length; i++) {
         sceneObjects[i]["active"].wireframe = false;
         if(sceneObjects[i].hasOwnProperty("basic")) {
