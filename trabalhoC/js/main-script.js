@@ -38,11 +38,11 @@ const grassColors = [GREEN, GREEN, GREEN, GREEN];
 const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
-const PLANE_SIZE = 64, DOME_SIZE = 64; // recommendation: power of 2
-const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
-const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
-const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
-const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 4;
+const PLANE_SIZE = 64, DOME_SIZE = 64, PLANE_Y = -10; // recommendation: power of 2
+const OVNI_HEIGHT = 20, OVNI_ROTATION_SPEED = 0.05;
+const MOON_HEIGHT = 30, MOON_Z = 15, MOON_RADIUS = 4;
+const HOUSE_Y = -5.5, HOUSE_X = -20; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
+const TREE_Y = -4.5, TREE_Z = 30, numOfTrees = 4;
 var trees = [];
 
 const standardScale = 1;
@@ -230,7 +230,7 @@ function animate() {
     update();
     render();
 
-    requestAnimationFrame(animate);
+    renderer.setAnimationLoop(animate);
 }
 
 /////////////////////
@@ -243,6 +243,7 @@ function createScene() {
     scene = new THREE.Scene();
 
     axesHelper = new THREE.AxesHelper(20);
+    axesHelper.visible = false;
     scene.add(axesHelper);
 
     plane();
@@ -251,7 +252,7 @@ function createScene() {
     createAmbientLight();
     createDirectionalLight();
 
-    addHouse(0, HOUSE_Y, 0);
+    addHouse(HOUSE_X, HOUSE_Y, 0);
     addOVNI(0, OVNI_HEIGHT, 0);
     addMoon(0, MOON_HEIGHT, MOON_Z);
     addTrees();
@@ -434,6 +435,7 @@ function createPlane() {
     const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
     const plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -Math.PI / 2; // make it horizontal
+    plane.position.set(0, PLANE_Y, 0);
     scene.add(plane);
     sceneObjects.push({"active": material});
 }
