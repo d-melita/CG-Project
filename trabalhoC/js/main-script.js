@@ -39,11 +39,12 @@ const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
 const NUMBER_LIGHTS = 8;
+const PLANE_Y = -10
 const PLANE_SIZE = 100, DOME_SIZE = 100;
-const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
-const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
-const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
-const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 4;
+const OVNI_HEIGHT = 20, OVNI_ROTATION_SPEED = 0.05;
+const MOON_HEIGHT = 30, MOON_Z = 15, MOON_RADIUS = 4;
+const HOUSE_Y = -5.5, HOUSE_X = -20;
+const TREE_Y = -4.5, TREE_Z = 30, numOfTrees = 4;
 const TRUNK1_HEIGHT = 5.2, TRUNK1_Y = 3.2, TRUNK1_Z = 1.3;
 const TRUNK2_HEIGHT = 7, TRUNK2_Y = 4.2, TRUNK2_Z = -2;
 const TRUNKS_RADIUS = 1;
