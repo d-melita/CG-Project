@@ -49,8 +49,10 @@ const TRUNK2_HEIGHT = 7, TRUNK2_Y = 4.2, TRUNK2_Z = -2;
 const TRUNKS_RADIUS = 1;
 const MAIN_TRUNK_HEIGHT = 3;
 const TRUNK1_LEAVES_Y = 5, TRUNK2_LEAVES_Y = 7, TRUNK1_LEAVES_Z = 3, TRUNK2_LEAVES_Z = -4;
+const LEAVES_SCALE_X = 2, LEAVES_SCALE_Y = 1, LEAVES_SCALE_Z = 4;
 
 var trees = [];
+const treesPositions = [[-25, 5.5, -25], [25, 5.5, -25], [-25, 5.5, 25], [25, 5.5, 25]];
 
 const standardScale = 1;
 const cockpitRadius = 2, ovniCockpitY = 1.5;
@@ -713,7 +715,7 @@ function addLeaves(obj, x, y, z) {
     'use strict';
 
     let leaves = new THREE.Object3D();
-    addElipse(leaves, 0, 0, 0, 2, 1, 4, GREEN);
+    addElipse(leaves, 0, 0, 0, LEAVES_SCALE_X, LEAVES_SCALE_Y, LEAVES_SCALE_Z, GREEN);
 
     leaves.position.set(x, y, z);
     obj.add(leaves);
@@ -759,10 +761,8 @@ function addTrees() {
     'use strict';
 
     for (let i = 0; i < numOfTrees; i++) {
-        let x = Math.random() * 100 - 50;
-        let z = Math.random() * 100 - 50;
         let size = Math.random() + 1;
-        addTree(x, TREE_Y, z, size);
+        addTree(treesPositions[i][0], treesPositions[i][1], treesPositions[i][2], size);
     }
     // TODO check if trees colide with each other, with the house and if they are to close to the border
 }
