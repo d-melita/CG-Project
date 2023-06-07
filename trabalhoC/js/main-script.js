@@ -39,7 +39,7 @@ const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
 const NUMBER_LIGHTS = 8;
-const PLANE_SIZE = 64, DOME_SIZE = 64; // recommendation: power of 2
+const PLANE_SIZE = 100, DOME_SIZE = 100;
 const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
 const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
@@ -256,6 +256,7 @@ function createScene() {
     axesHelper = new THREE.AxesHelper(20);
     axesHelper.visible = false;
     scene.add(axesHelper);
+    axesHelper.visible = false;
 
     plane();
     sky();
@@ -274,7 +275,7 @@ function plane() {
 
     grassScene = new THREE.Scene();
     grassTexture = new THREE.WebGLRenderTarget(
-        window.innerWidth*4, window.innerHeight*4, 
+        16000, 16000, 
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
