@@ -38,11 +38,18 @@ const grassColors = [GREEN, GREEN, GREEN, GREEN];
 const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
-const PLANE_SIZE = 64, DOME_SIZE = 64, PLANE_Y = -10; // recommendation: power of 2
-const OVNI_HEIGHT = 20, OVNI_ROTATION_SPEED = 0.05;
-const MOON_HEIGHT = 30, MOON_Z = 15, MOON_RADIUS = 4;
-const HOUSE_Y = -5.5, HOUSE_X = -20; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
-const TREE_Y = -4.5, TREE_Z = 30, numOfTrees = 4;
+const NUMBER_LIGHTS = 8;
+const PLANE_SIZE = 64, DOME_SIZE = 64; // recommendation: power of 2
+const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
+const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
+const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
+const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 4;
+const TRUNK1_HEIGHT = 5.2, TRUNK1_Y = 3.2, TRUNK1_Z = 1.3;
+const TRUNK2_HEIGHT = 7, TRUNK2_Y = 4.2, TRUNK2_Z = -2;
+const TRUNKS_RADIUS = 1;
+const MAIN_TRUNK_HEIGHT = 3;
+const TRUNK1_LEAVES_Y = 5, TRUNK2_LEAVES_Y = 7, TRUNK1_LEAVES_Z = 3, TRUNK2_LEAVES_Z = -4;
+
 var trees = [];
 
 const standardScale = 1;
@@ -396,8 +403,7 @@ function createDirectionalLight() {
     directionalLight = new THREE.DirectionalLight(WHITE, 0.8);
     directionalLight.position.set(1, 1, 0);
     scene.add(directionalLight);
-}
-
+}1
 function createSpotLight(obj) {
     'use strict';
 
@@ -547,8 +553,6 @@ function addBase(obj, x, y, z) {
 
 function addLights(obj, x, y, z) {
     'use strict';
-
-    const NUMBER_LIGHTS = 8;
 
     let rotation = (2*Math.PI)/NUMBER_LIGHTS;
 
@@ -723,11 +727,11 @@ function addTrunks(obj, x, y, z) {
     var trunk2 = new THREE.Object3D();
     var topTrunks = new THREE.Object3D();
 
-    addCylinder(baseTrunk, 0, 0, 0, 1, 3, '', 0, BROWN);
-    addCylinder(trunk1, 0, 3.2, 1.3, 1, 5.2, 'x', Math.PI/4, BROWN);
-    addCylinder(trunk2, 0, 4.2, -2, 1, 7, 'x', -Math.PI/4, BROWN);
-    addLeaves(trunk1, 0, 5, 3);
-    addLeaves(trunk2, 0, 7, -4);
+    addCylinder(baseTrunk, 0, 0, 0, TRUNKS_RADIUS, MAIN_TRUNK_HEIGHT, '', 0, BROWN);
+    addCylinder(trunk1, 0, TRUNK1_Y, TRUNK1_Z, TRUNKS_RADIUS, TRUNK1_HEIGHT, 'x', Math.PI/4, BROWN);
+    addCylinder(trunk2, 0, TRUNK2_Y, TRUNK2_Z, TRUNKS_RADIUS, TRUNK2_HEIGHT, 'x', -Math.PI/4, BROWN);
+    addLeaves(trunk1, 0, TRUNK1_LEAVES_Y, TRUNK1_LEAVES_Z);
+    addLeaves(trunk2, 0, TRUNK2_LEAVES_Y, TRUNK2_LEAVES_Z);
 
     topTrunks.add(trunk1);
     topTrunks.add(trunk2);
