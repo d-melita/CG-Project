@@ -1,10 +1,10 @@
 /* 
-* Trabalho C - Transformer
+* Trabalho C
 * CG 2022/2023
 * Diogo Melita ist199202
 * João Rocha ist199256
 * Grupo 33 - Alameda
-* Média de horas de trabalho: 
+* Média de horas de trabalho: 12h
 */
 
 /* We can toggle the axis helper using the 'H' key */
@@ -30,7 +30,9 @@ let grassUpdate = false;
 let skyUpdate = false;
 
 const frustumSize = 50;
-const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), RED = new THREE.Color(0xff0000), DARK_RED = new THREE.Color(0x960909), GREY = new THREE.Color(0x909090), BROWN = new THREE.Color(0x9c4f0c), GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
+const renderSize = 16384; // 2^14 - recommended to be a power of 2
+const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), BROWN = new THREE.Color(0x9c4f0c);
+const GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
 const MATERIAL = 0;
 
 const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
@@ -39,11 +41,13 @@ const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
 const NUMBER_LIGHTS = 8;
+const PLANE_Y = -10;
 const PLANE_SIZE = 100, DOME_SIZE = 100;
-const OVNI_HEIGHT = 30, OVNI_ROTATION_SPEED = 0.05;
-const MOON_HEIGHT = 40, MOON_Z = 15, MOON_RADIUS = 4;
-const HOUSE_Y = 4.5; // due to the heightmap, we need to put the house a bit higher so it doesnt get cropped
-const TREE_Y = 5.5, TREE_Z = 30, numOfTrees = 4;
+const OVNI_HEIGHT = 20, OVNI_ROTATION_SPEED = 0.05;
+const MOON_HEIGHT = 30, MOON_Z = 15, MOON_RADIUS = 4;
+const HOUSE_Y = -5.5, HOUSE_X = -20;
+const numOfTrees = 4;
+const TREE_X = 25, TREE_Z = 25, TREE_Y = -4.5;
 const TRUNK1_HEIGHT = 5.2, TRUNK1_Y = 3.2, TRUNK1_Z = 1.3;
 const TRUNK2_HEIGHT = 7, TRUNK2_Y = 4.2, TRUNK2_Z = -2;
 const TRUNKS_RADIUS = 1;
@@ -52,7 +56,7 @@ const TRUNK1_LEAVES_Y = 5, TRUNK2_LEAVES_Y = 7, TRUNK1_LEAVES_Z = 3, TRUNK2_LEAV
 const LEAVES_SCALE_X = 2, LEAVES_SCALE_Y = 1, LEAVES_SCALE_Z = 4;
 
 var trees = [];
-const treesPositions = [[-25, 5.5, -25], [25, 5.5, -25], [-25, 5.5, 25], [25, 5.5, 25]];
+const treesPositions = [[-TREE_X, TREE_Y, -TREE_Z], [TREE_X, TREE_Y, -TREE_Z], [-TREE_X, TREE_Y, TREE_Z], [TREE_X, TREE_Y, TREE_Z]];
 
 const standardScale = 1;
 const cockpitRadius = 2, ovniCockpitY = 1.5;
@@ -76,6 +80,7 @@ function init() {
     'use strict';
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio); 
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
     document.body.appendChild( VRButton.createButton( renderer ) );
@@ -239,7 +244,7 @@ function animate() {
     update();
     render();
 
-    requestAnimationFrame(animate);
+    renderer.setAnimationLoop(animate);
 }
 
 /////////////////////
@@ -261,7 +266,7 @@ function createScene() {
     createAmbientLight();
     createDirectionalLight();
 
-    addHouse(0, HOUSE_Y, 0);
+    addHouse(HOUSE_X, HOUSE_Y, 0);
     addOVNI(0, OVNI_HEIGHT, 0);
     addMoon(0, MOON_HEIGHT, MOON_Z);
     addTrees();
@@ -272,7 +277,7 @@ function plane() {
 
     grassScene = new THREE.Scene();
     grassTexture = new THREE.WebGLRenderTarget(
-        16000, 16000, 
+        16384, 16384, 
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
@@ -291,7 +296,7 @@ function sky() {
 
     skyScene = new THREE.Scene();
     skyTexture = new THREE.WebGLRenderTarget(
-        window.innerWidth*4, window.innerHeight*4, 
+        16384, 16384, 
         { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
     );
 
@@ -443,6 +448,7 @@ function createPlane() {
     const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
     const plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -Math.PI / 2; // make it horizontal
+    plane.position.set(0, PLANE_Y, 0);
     scene.add(plane);
     sceneObjects.push({"active": material});
 }
@@ -761,7 +767,6 @@ function addTrees() {
         let size = Math.random() + 1;
         addTree(treesPositions[i][0], treesPositions[i][1], treesPositions[i][2], size);
     }
-    // TODO check if trees colide with each other, with the house and if they are to close to the border
 }
 
 ////////////////////////////
