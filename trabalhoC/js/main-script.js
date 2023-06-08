@@ -68,9 +68,11 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    document.body.appendChild( VRButton.createButton( renderer ) );
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement); 
+    
     renderer.xr.enabled = true;
+    document.body.appendChild(VRButton.createButton(renderer)); 
 
     createScene();
     createCamera();
