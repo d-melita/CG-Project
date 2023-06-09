@@ -544,15 +544,15 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
     });
 }
 
-function addSphere(obj, x, y, z, radius, color) {
+function addSphere(obj, x, y, z, radius, color, emissive) {
     'use strict';
 
     let geometry = new THREE.SphereGeometry(radius, 32, 32);
 
     let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
-    let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
-    let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
-    let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+    let lambertMaterial = new THREE.MeshLambertMaterial({color: color, emissive: emissive, wireframe: false});
+    let phongMaterial = new THREE.MeshPhongMaterial({color: color, emissive: emissive, wireframe: false});
+    let cartoonMaterial = new THREE.MeshToonMaterial({color: color, emissive: emissive, wireframe: false});
 
     let sphere = new THREE.Mesh(geometry, lambertMaterial);
 
@@ -568,7 +568,7 @@ function addSphere(obj, x, y, z, radius, color) {
 function addElipse(obj, x, y, z, xScale, yScale, zScale, color) {
     'use strict';
 
-    addSphere(obj, x, y, z, 1, color);
+    addSphere(obj, x, y, z, 1, color, false);
     obj.scale.set(xScale, yScale, zScale);
 }
 
@@ -576,7 +576,7 @@ function addCockpit(obj, x, y, z) {
     'use strict';
 
     let cockpit = new THREE.Object3D();
-    addSphere(cockpit, 0, 0, 0, COCKPIT_RADIUS, WHITE);
+    addSphere(cockpit, 0, 0, 0, COCKPIT_RADIUS, WHITE, false);
 
     cockpit.position.set(x, y, z);
     obj.add(cockpit);
@@ -612,7 +612,7 @@ function addLights(obj, x, y, z) {
     for (var i = 0; i < NUMBER_LIGHTS; i++){
         let light = new THREE.Object3D();
 
-        addSphere(light, OVNI_LIGHTS_X, 0, 0, OVNI_LIGHTS_RADIUS, BLUE);
+        addSphere(light, OVNI_LIGHTS_X, 0, 0, OVNI_LIGHTS_RADIUS, BLUE, false);
         createPointLight(light);
 
         light.rotateY(rotation*i);
@@ -755,7 +755,9 @@ function addMoon(x, y, z) {
 
     moon = new THREE.Object3D();
 
-    addSphere(moon, 0, 0, 0, MOON_RADIUS, YELLOW);
+    addSphere(moon, 0, 0, 0, MOON_RADIUS, YELLOW, true);
+    console.log(moon);
+    // moon.material.emissive = true;
 
     moon.position.set(x, y, z);
     scene.add(moon);
