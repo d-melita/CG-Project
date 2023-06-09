@@ -2,7 +2,7 @@
 * Trabalho C
 * CG 2022/2023
 * Diogo Melita ist199202
-* João Rocha ist199256
+* João OVNI_BASE_Y ist199256
 * Grupo 33 - Alameda
 * Média de horas de trabalho: 12h
 */
@@ -15,11 +15,12 @@
 //////////////////////
 
 let activeCamera, camera, debugCamera, scene, renderer, controls, perspective_camera;
-let skyVar, skyScene, skyTexture, skyCamera;
-let grass, grassScene, grassTexture, grassCamera;
+
+let skyObj, skyScene, skyTexture, skyCamera, skyUpdate = false;
+let grassObj, grassScene, grassTexture, grassCamera, grassUpdate = false;
 
 let axesHelper;
-let house, ovni, moon, tree, skyDome;
+let house, ovni, moon, tree;
 
 let ambientLight, spotLight, directionalLight;
 let pointLights = [];
@@ -27,19 +28,25 @@ let sceneObjects = [];
 let grassMesh = [];
 let skyMesh = [];
 
-let grassUpdate = false;
-let skyUpdate = false;
+// colors
+const WHITE = new THREE.Color(0xffffff);
+const BLACK = new THREE.Color(0x000000);
+const BLUE = new THREE.Color(0x0000ff);
+const BROWN = new THREE.Color(0x9c4f0c);
+const GREEN = new THREE.Color(0x07820d);
+const ORANGE = new THREE.Color(0xfc5203);
+const PURPLE = new THREE.Color(0xa32cc4);
+const YELLOW = new THREE.Color(0xf5e105);
 
-const frustumSize = 50;
-const renderSize = 16384; // 2^14 - recommended to be a power of 2
-const WHITE = new THREE.Color(0xffffff), BLACK = new THREE.Color(0x000000), BLUE = new THREE.Color(0x0000ff), BROWN = new THREE.Color(0x9c4f0c);
-const GREEN = new THREE.Color(0x07820d), ORANGE = new THREE.Color(0xfc5203), PURPLE = new THREE.Color(0xa32cc4), YELLOW = new THREE.Color(0xf5e105);
+const SKY_COLORS = [PURPLE, BLUE, BLUE, PURPLE];
+const GRASS_COLORS = [GREEN, GREEN, GREEN, GREEN];
+const FLOWER_COLORS = [WHITE, YELLOW, PURPLE, BLUE];
+
 const MATERIAL = 0;
-
-const skyColors = [PURPLE, BLUE, BLUE, PURPLE];
-const grassColors = [GREEN, GREEN, GREEN, GREEN];
-const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
-const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
+const NUM_STARS = 500, NUM_FLOWERS = 200;
+const STAR_RADIUS = 0.05, FLOWER_RADIUS = 0.1;
+const FRUSTUM_SIZE = 50;
+const RENDER_SIZE = 16384; // 2^14 - recommended to be a power of 2
 
 const NUMBER_LIGHTS = 8;
 const PLANE_Y = -15;
@@ -47,8 +54,9 @@ const PLANE_SIZE = 100, DOME_SIZE = 100;
 const OVNI_HEIGHT = 20, OVNI_ROTATION_SPEED = 0.05;
 const MOON_HEIGHT = 30, MOON_Z = 15, MOON_RADIUS = 4;
 const HOUSE_Y = -7, HOUSE_X = -20;
-const numOfTrees = 4;
+const NUM_OF_TREES = 4;
 const TREE_X = 25, TREE_Z = 25, TREE_Y = -5.5;
+
 const TRUNK1_HEIGHT = 5.2, TRUNK1_Y = 3.2, TRUNK1_Z = 1.3;
 const TRUNK2_HEIGHT = 7, TRUNK2_Y = 4.2, TRUNK2_Z = -2;
 const TRUNKS_RADIUS = 1;
@@ -59,11 +67,12 @@ const LEAVES_SCALE_X = 2, LEAVES_SCALE_Y = 1, LEAVES_SCALE_Z = 4;
 var trees = [];
 const treesPositions = [[-TREE_X, TREE_Y, -TREE_Z], [TREE_X, TREE_Y, -TREE_Z], [-TREE_X, TREE_Y, TREE_Z], [TREE_X, TREE_Y, TREE_Z]];
 
-const standardScale = 1;
-const cockpitRadius = 2, ovniCockpitY = 1.5;
-const onviBodyScaleX = 6, ovniBodyScaleY = 1.5, ovniBodyScaleZ = 6;
-const ovniBaseRadius = 2, ovniBaseHeight = 2, ovniBaseY = -1.5;
-const onviLightsX = 4, ovniLightsRadius = 1, onviLightsY = -0.5; //ovniLightsY = 2-1-1.5;
+const COCKPIT_RADIUS = 2, OVNI_COCKPIT_Y = 1.5;
+const OVNI_BODY_SCALE_X = 6, OVNI_BODY_SCALE_Y = 1.5, OVNI_BODY_SCALE_Z = 6;
+const OVNI_BASE_RADIUS = 2, OVNI_BASE_HEIGHT = 2, OVNI_BASE_Y = -1.5;
+const OVNI_LIGHTS_X = 4, OVNI_LIGHTS_RADIUS = 1, OVNI_LIGHTS_Y = -0.5; //ovniLightsY = 2-1-1.5;
+
+const AMBIENT_INTENSITY = 0.3, DIRECTIONAL_INTENSITY = 0.8;
 
 let movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
@@ -205,9 +214,7 @@ function update(){
     for (const [key, val] of Object.entries(keys))
         val.call();
 
-    ovni.rotateY(OVNI_ROTATION_SPEED);
-    ovni.position.add(movementVector);
-    spotLight.target.position.set(ovni.position.x, 0, ovni.position.z);
+    updateOvni();
 
     if (grassUpdate) {
         updateTexture(grassMesh);
@@ -220,6 +227,12 @@ function update(){
         renderTarget(skyTexture, skyScene, skyCamera);
         skyUpdate = false;
     }
+}
+
+function updateOvni() {
+    ovni.rotateY(OVNI_ROTATION_SPEED);
+    ovni.position.add(movementVector);
+    spotLight.target.position.set(ovni.position.x, 0, ovni.position.z);
 }
 
 function updateTexture(desiredMesh) {
@@ -274,11 +287,11 @@ function createScene() {
     scene.add(axesHelper);
     axesHelper.visible = false;
 
-    plane();
-    sky();
+    generatePlane();
+    generateDome();
 
-    createAmbientLight();
-    createDirectionalLight();
+    createAmbientLight(AMBIENT_INTENSITY);
+    createDirectionalLight(DIRECTIONAL_INTENSITY);
 
     addHouse(HOUSE_X, HOUSE_Y, 0);
     addOVNI(0, OVNI_HEIGHT, 0);
@@ -286,45 +299,45 @@ function createScene() {
     addTrees();
 }
 
-function plane() {
+function generatePlane() {
     'use strict';
 
     grassScene = new THREE.Scene();
     grassTexture = new THREE.WebGLRenderTarget(
-        16384, 16384, 
-        { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
+        RENDER_SIZE, RENDER_SIZE, 
+        { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter }
     );
 
-    grass = generateTexture(grass, grassScene, grassColors, PLANE_SIZE);
+    grassObj = generateTexture(grassObj, grassScene, GRASS_COLORS, PLANE_SIZE);
 
-    grassCamera = getOrthographicCamera(PLANE_SIZE/2, 20, PLANE_SIZE/2, PLANE_SIZE);
+    grassCamera = getOrthographicCamera(PLANE_SIZE/2, 20, PLANE_SIZE/2);
     grassScene.add(grassCamera);
 
-    addExtra(grass, numberOfFlowers, flowerRadius, flowerColors, grassScene, grassMesh, PLANE_SIZE);
+    addExtra(grassObj, NUM_FLOWERS, FLOWER_RADIUS, FLOWER_COLORS, grassScene, grassMesh, PLANE_SIZE);
     createPlane();
     renderTarget(grassTexture, grassScene, grassCamera);
 }
 
-function sky() {
+function generateDome() {
     'use strict';
 
     skyScene = new THREE.Scene();
     skyTexture = new THREE.WebGLRenderTarget(
-        16384, 16384, 
-        { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter}
+        RENDER_SIZE, RENDER_SIZE, 
+        { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter }
     );
 
-    skyVar = generateTexture(skyVar, skyScene, skyColors, DOME_SIZE);
+    skyObj = generateTexture(skyObj, skyScene, SKY_COLORS, DOME_SIZE);
 
-    skyCamera = getOrthographicCamera(PLANE_SIZE/2, 20, PLANE_SIZE/2, PLANE_SIZE);
+    skyCamera = getOrthographicCamera(PLANE_SIZE/2, 20, PLANE_SIZE/2);
     skyScene.add(skyCamera);
 
-    addExtra(skyVar, numberOfStars, starRadius, [WHITE], skyScene, skyMesh, DOME_SIZE);
-    createSkyDome();
+    addExtra(skyObj, NUM_STARS, STAR_RADIUS, [WHITE], skyScene, skyMesh, DOME_SIZE);
+    createDome();
     renderTarget(skyTexture, skyScene, skyCamera);
 }
 
-function generateTexture(obj, newScene, colors, textureSize) {
+function generateTexture(obj, textureScene, textureColors, textureSize) {
 
     const geometry = new THREE.BufferGeometry();
     const positions = [
@@ -337,16 +350,16 @@ function generateTexture(obj, newScene, colors, textureSize) {
         0, 1, 2, 
         2, 3, 0
     ];
-    colors = colors.flatMap((color) => [color.r, color.g, color.b,]);
+    textureColors = textureColors.flatMap((color) => [color.r, color.g, color.b,]);
   
     geometry.setIndex(indices);
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(textureColors, 3));
   
     const material = new THREE.MeshBasicMaterial({vertexColors: true,});
   
     obj = new THREE.Mesh(geometry, material);
-    newScene.add(obj);
+    textureScene.add(obj);
 
     return obj;
 }
@@ -400,9 +413,10 @@ function getPerspectiveCamera(x, y, z) {
     return camera;
 }
 
-function getOrthographicCamera(pos_x, pos_y, pos_z, size) {
-    const aspect = size / size;
-    const camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 100);
+function getOrthographicCamera(pos_x, pos_y, pos_z) {
+    const camera = new THREE.OrthographicCamera(
+        FRUSTUM_SIZE / - 2, FRUSTUM_SIZE / 2, FRUSTUM_SIZE / 2, FRUSTUM_SIZE / - 2, 1, 100
+    );
     camera.position.set(pos_x, pos_y, pos_z);
     camera.lookAt(new THREE.Vector3(pos_x, 0, pos_z));
     return camera;
@@ -412,15 +426,15 @@ function getOrthographicCamera(pos_x, pos_y, pos_z, size) {
 /* CREATE LIGHT(S) */
 /////////////////////
 
-function createAmbientLight() {
+function createAmbientLight(intensity) {
     'use strict';
-    ambientLight = new THREE.AmbientLight(WHITE, 0.5);
+    ambientLight = new THREE.AmbientLight(WHITE, intensity);
     scene.add(ambientLight);
 }
 
-function createDirectionalLight() {
+function createDirectionalLight(intensity) {
     'use strict';
-    directionalLight = new THREE.DirectionalLight(WHITE, 0.8);
+    directionalLight = new THREE.DirectionalLight(WHITE, intensity);
     directionalLight.position.set(1, 1, 0);
     scene.add(directionalLight);
 }1
@@ -454,31 +468,30 @@ function createPlane() {
     const displacementMap = loader.load('./textures/heightmap.png');
 
     const material = new THREE.MeshPhongMaterial({
-        displacementMap: displacementMap,
-        displacementScale: 40,
-        side: THREE.DoubleSide,
-        map: grassTexture.texture
+        displacementMap: displacementMap, displacementScale: 40,
+        map: grassTexture.texture, side: THREE.DoubleSide
     });
 
     const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
     const plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -Math.PI / 2; // make it horizontal
+
     plane.position.set(0, PLANE_Y, 0);
     scene.add(plane);
     sceneObjects.push({"active": material});
 }
 
-function createSkyDome() {
+function createDome() {
     'use strict';
 
     let geometry = new THREE.SphereGeometry(100, 32, 32);
-    let material = new THREE.MeshBasicMaterial({
-        map: skyTexture.texture,
-        side: THREE.BackSide
+    let material = new THREE.MeshPhongMaterial({
+        map: skyTexture.texture, side: THREE.BackSide
     });
-    skyDome = new THREE.Mesh(geometry, material);
-    skyDome.position.set(0, 0, 0);
-    scene.add(skyDome);
+    let dome = new THREE.Mesh(geometry, material);
+
+    dome.position.set(0, 0, 0);
+    scene.add(dome);
     sceneObjects.push({"active": material});
 }
 
@@ -499,10 +512,12 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
       default:
         break;
     }
+
     let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
     let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
     let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
     let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+
     let cylinder = new THREE.Mesh(geometry, lambertMaterial);
 
     cylinder.position.set(x, y, z);
@@ -518,10 +533,12 @@ function addSphere(obj, x, y, z, radius, color) {
     'use strict';
 
     let geometry = new THREE.SphereGeometry(radius, 32, 32);
+
     let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
     let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
     let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
     let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+
     let sphere = new THREE.Mesh(geometry, lambertMaterial);
 
     sphere.position.set(x, y, z);
@@ -544,7 +561,7 @@ function addCockpit(obj, x, y, z) {
     'use strict';
 
     let cockpit = new THREE.Object3D();
-    addSphere(cockpit, 0, 0, 0, cockpitRadius, WHITE);
+    addSphere(cockpit, 0, 0, 0, COCKPIT_RADIUS, WHITE);
 
     cockpit.position.set(x, y, z);
     obj.add(cockpit);
@@ -554,11 +571,10 @@ function addBody(obj, x, y, z) {
     'use strict';
 
     let body = new THREE.Object3D();
-    addElipse(body, 0, 0, 0, onviBodyScaleX, ovniBodyScaleY, ovniBodyScaleZ, BLACK); // main body
+    addElipse(body, 0, 0, 0, OVNI_BODY_SCALE_X, OVNI_BODY_SCALE_Y, OVNI_BODY_SCALE_Z, BLACK);
 
     body.position.set(x, y, z);
     obj.add(body);
-
 }
 
 function addBase(obj, x, y, z) {
@@ -566,7 +582,7 @@ function addBase(obj, x, y, z) {
 
     let base = new THREE.Object3D();
 
-    addCylinder(base, 0, 0, 0, ovniBaseRadius, ovniBaseHeight, '', 0, WHITE);
+    addCylinder(base, 0, 0, 0, OVNI_BASE_RADIUS, OVNI_BASE_HEIGHT, '', 0, WHITE);
     createSpotLight(base);
 
     base.position.set(x, y, z);
@@ -581,7 +597,7 @@ function addLights(obj, x, y, z) {
     for (var i = 0; i < NUMBER_LIGHTS; i++){
         let light = new THREE.Object3D();
 
-        addSphere(light, onviLightsX, 0, 0, ovniLightsRadius, BLUE);
+        addSphere(light, OVNI_LIGHTS_X, 0, 0, OVNI_LIGHTS_RADIUS, BLUE);
         createPointLight(light);
 
         light.rotateY(rotation*i);
@@ -595,32 +611,34 @@ function addOVNI(x, y, z) {
 
     ovni = new THREE.Object3D();
 
-    addCockpit(ovni, 0, ovniCockpitY, 0);
+    addCockpit(ovni, 0, OVNI_BODY_SCALE_Y, 0);
     addBody(ovni, 0, 0, 0);
-    addBase(ovni, 0, ovniBaseY, 0);
-    addLights(ovni, 0, onviLightsY, 0);
+    addBase(ovni, 0, OVNI_BASE_Y, 0);
+    addLights(ovni, 0, OVNI_LIGHTS_Y, 0);
 
     ovni.position.set(x, y, z);
     scene.add(ovni);
 }
 
-
 function addGeometry(obj, x, y, z, vertices, indexs, color) {
     'use strict';
     
     let geometry = new THREE.Object3D();
+
     let bufferTexture = new THREE.BufferGeometry();
-    bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     bufferTexture.setIndex(indexs);
+    bufferTexture.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     bufferTexture.computeVertexNormals();
+
     let basicMaterial = new THREE.MeshBasicMaterial({color: color, wireframe: false});
     let lambertMaterial = new THREE.MeshLambertMaterial({color: color, wireframe: false});
     let phongMaterial = new THREE.MeshPhongMaterial({color: color, wireframe: false});
     let cartoonMaterial = new THREE.MeshToonMaterial({color: color, wireframe: false});
+
     let mesh = new THREE.Mesh(bufferTexture, lambertMaterial);
 
     mesh.position.set(x, y, z);
-    sceneObjects.push( {
+    sceneObjects.push({
         "mesh": mesh, "active": lambertMaterial, "previous": basicMaterial,
         "basic": basicMaterial, "lambert": lambertMaterial, 
         "phong": phongMaterial, "cartoon": cartoonMaterial
@@ -634,7 +652,7 @@ function addHouse(x, y, z) {
     // create house using polygon mesh
     house = new THREE.Object3D();
 
-    let verticesWalls = [
+    let wallVertices = [
         0, 0, 0,
         0, 0, 16,
         6, 0, 0,
@@ -659,7 +677,7 @@ function addHouse(x, y, z) {
         6, 6, 12,
         6, 6, 14,
     ];
-    const indexsWalls = [
+    const wallIndexes = [
         0, 1, 2,
         2, 3, 1,
         0, 1, 5,
@@ -687,33 +705,32 @@ function addHouse(x, y, z) {
         16, 13, 15, 
         16, 15, 18
     ];
-
-    const doorWindowsIndexs = [
+    const doorWindowIndexes = [
         9, 8, 10,
         9, 10, 11,
         13, 12, 14,
         13, 14, 15,
         17, 16, 18, 
         17, 18, 19
-    ]
-
-    addGeometry(house, 0, 0, 0, verticesWalls, indexsWalls, WHITE);
-    addGeometry(house, 0, 0, 0, verticesWalls, doorWindowsIndexs, BLUE);
-
-    let verticesRoof = [
+    ];
+    let roofVertices = [
         0, 8, 0,
         0, 8, 16,
         6, 8, 0,
         6, 8, 16,
         3, 10, 8
     ];
-    const indexsRoof = [
+    const roofIndexes = [
         0, 1, 4,
         1, 3, 4,
         3, 2, 4,
         2, 0, 4,
     ];
-    addGeometry(house, 0, 0, 0, verticesRoof, indexsRoof, ORANGE);
+
+    addGeometry(house, 0, 0, 0, wallVertices, wallIndexes, WHITE);
+    addGeometry(house, 0, 0, 0, wallVertices, doorWindowIndexes, BLUE);
+    addGeometry(house, 0, 0, 0, roofVertices, roofIndexes, ORANGE);
+
     house.position.set(x, y, z);
     scene.add(house);
 }
@@ -722,7 +739,9 @@ function addMoon(x, y, z) {
     'use strict';
 
     moon = new THREE.Object3D();
+
     addSphere(moon, 0, 0, 0, MOON_RADIUS, YELLOW);
+
     moon.position.set(x, y, z);
     scene.add(moon);
 }
@@ -731,6 +750,7 @@ function addLeaves(obj, x, y, z) {
     'use strict';
 
     let leaves = new THREE.Object3D();
+
     addElipse(leaves, 0, 0, 0, LEAVES_SCALE_X, LEAVES_SCALE_Y, LEAVES_SCALE_Z, GREEN);
 
     leaves.position.set(x, y, z);
@@ -766,8 +786,8 @@ function addTree(x, y, z, size) {
     tree = new THREE.Object3D();
 
     addTrunks(tree, 0, 0, 0, size);
-
     tree.scale.set(1, size, 1);
+
     tree.position.set(x, y, z);
     scene.add(tree);
     trees.push(tree);
@@ -776,7 +796,7 @@ function addTree(x, y, z, size) {
 function addTrees() {
     'use strict';
 
-    for (let i = 0; i < numOfTrees; i++) {
+    for (let i = 0; i < NUM_OF_TREES; i++) {
         let size = Math.random() + 1;
         addTree(treesPositions[i][0], treesPositions[i][1], treesPositions[i][2], size);
     }
