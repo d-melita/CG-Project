@@ -2,7 +2,7 @@
 * Trabalho C
 * CG 2022/2023
 * Diogo Melita ist199202
-* João OVNI_BASE_Y ist199256
+* João Rocha ist199256
 * Grupo 33 - Alameda
 * Média de horas de trabalho: 12h
 */
