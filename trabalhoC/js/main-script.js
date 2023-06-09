@@ -448,10 +448,11 @@ function createAmbientLight(intensity) {
 
 function createDirectionalLight(intensity) {
     'use strict';
-    directionalLight = new THREE.DirectionalLight(WHITE, intensity);
+    directionalLight = new THREE.DirectionalLight(YELLOW, intensity);
     directionalLight.position.set(1, 1, 0);
     scene.add(directionalLight);
-}1
+}
+
 function createSpotLight(obj) {
     'use strict';
 
