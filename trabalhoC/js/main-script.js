@@ -446,7 +446,7 @@ function createPlane() {
     const loader = new THREE.TextureLoader();
     const displacementMap = loader.load('./textures/heightmap.png');
 
-    const material = new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshPhongMaterial({
         displacementMap: displacementMap,
         displacementScale: 40,
         side: THREE.DoubleSide,
