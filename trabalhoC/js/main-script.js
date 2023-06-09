@@ -136,7 +136,7 @@ function onHKeyDown() { // H key
 function onQKeyDown() { // Q key - change to Lambert material
     for (var i = 0; i < sceneObjects.length; i++) {
         sceneObjects[i]["active"].wireframe = false;
-        if(sceneObjects[i].hasOwnProperty("lambert")) {
+        if(sceneObjects[i].hasOwnProperty("lambert") && sceneObjects[i]["active"] != sceneObjects[i]["basic"]) {
             sceneObjects[i]["active"] = sceneObjects[i]["lambert"];
             sceneObjects[i]["mesh"].material = sceneObjects[i]["lambert"];
         }
@@ -146,7 +146,7 @@ function onQKeyDown() { // Q key - change to Lambert material
 function onWKeyDown() { // W key - change to Phong material
     for (var i = 0; i < sceneObjects.length; i++) {
         sceneObjects[i]["active"].wireframe = false;
-        if(sceneObjects[i].hasOwnProperty("phong")) {
+        if(sceneObjects[i].hasOwnProperty("phong") && sceneObjects[i]["active"] != sceneObjects[i]["basic"]) {
             sceneObjects[i]["active"] = sceneObjects[i]["phong"];
             sceneObjects[i]["mesh"].material = sceneObjects[i]["phong"];
         }
@@ -156,21 +156,28 @@ function onWKeyDown() { // W key - change to Phong material
 function onEKeyDown() { // E key - change to cartoon material
     for (var i = 0; i < sceneObjects.length; i++) {
         sceneObjects[i]["active"].wireframe = false;
-        if(sceneObjects[i].hasOwnProperty("cartoon")) {
+        if(sceneObjects[i].hasOwnProperty("cartoon") && sceneObjects[i]["active"] != sceneObjects[i]["basic"]) {
             sceneObjects[i]["active"] = sceneObjects[i]["cartoon"];
             sceneObjects[i]["mesh"].material = sceneObjects[i]["cartoon"];
         }
     }
 }
 
-function onRKeyDown() { // E key - change to basic material - turn off illumination
+function onRKeyDown() { // R key - turn off illumination
     for (var i = 0; i < sceneObjects.length; i++) {
         sceneObjects[i]["active"].wireframe = false;
         if(sceneObjects[i].hasOwnProperty("basic")) {
-            sceneObjects[i]["active"] = sceneObjects[i]["basic"];
-            sceneObjects[i]["mesh"].material = sceneObjects[i]["basic"];
+            if(sceneObjects[i]["active"] == sceneObjects[i]["basic"]) {
+                sceneObjects[i]["active"] = sceneObjects[i]["previous"];
+                sceneObjects[i]["mesh"].material = sceneObjects[i]["active"];
+            } else {
+                sceneObjects[i]["previous"] = sceneObjects[i]["active"];
+                sceneObjects[i]["active"] = sceneObjects[i]["basic"];
+                sceneObjects[i]["mesh"].material = sceneObjects[i]["active"];
+            }
         }
     }
+    delete keys[82];
 }
 
 function onPKeyDown() { // P key - turn on/off point light
@@ -501,8 +508,9 @@ function addCylinder(obj, x, y, z, radius, height, rotation_axis, rotation_degre
     cylinder.position.set(x, y, z);
     obj.add(cylinder);
     sceneObjects.push({
-        "mesh": cylinder, "active": lambertMaterial, "basic": basicMaterial,
-        "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
+        "mesh": cylinder, "active": lambertMaterial, "previous": basicMaterial, 
+        "basic": basicMaterial, "lambert": lambertMaterial, 
+        "phong": phongMaterial, "cartoon": cartoonMaterial
     });
 }
 
@@ -519,8 +527,9 @@ function addSphere(obj, x, y, z, radius, color) {
     sphere.position.set(x, y, z);
     obj.add(sphere);
     sceneObjects.push( {
-        "mesh": sphere, "active": lambertMaterial, "basic": basicMaterial,
-        "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
+        "mesh": sphere, "active": lambertMaterial, "previous": basicMaterial,
+        "basic": basicMaterial, "lambert": lambertMaterial, 
+        "phong": phongMaterial, "cartoon": cartoonMaterial
     });
 }
 
@@ -612,8 +621,9 @@ function addGeometry(obj, x, y, z, vertices, indexs, color) {
 
     mesh.position.set(x, y, z);
     sceneObjects.push( {
-        "mesh": mesh, "active": lambertMaterial, "basic": basicMaterial,
-        "lambert": lambertMaterial, "phong": phongMaterial, "cartoon": cartoonMaterial
+        "mesh": mesh, "active": lambertMaterial, "previous": basicMaterial,
+        "basic": basicMaterial, "lambert": lambertMaterial, 
+        "phong": phongMaterial, "cartoon": cartoonMaterial
     });
     geometry.add(mesh);
     obj.add(geometry);
