@@ -74,6 +74,7 @@ const OVNI_LIGHTS_X = 4, OVNI_LIGHTS_RADIUS = 1, OVNI_LIGHTS_Y = -0.5; //ovniLig
 
 const AMBIENT_INTENSITY = 0.3, DIRECTIONAL_INTENSITY = 0.8;
 
+let resize = false;
 let movementVector = new THREE.Vector3(0, 0, 0);
 const MOVEMENT_SPEED = 15;
 
@@ -206,8 +207,21 @@ function onDKeyDown() { // D key - turn on/off moondirectional light
     delete keys[68];
 }
 
+function resizeWindow() {
+    'use strict';
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    if (window.innerHeight > 0 && window.innerWidth > 0) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }
+}
+
 function update(){
     'use strict';
+
+    if (resize) resizeWindow();
 
     movementVector.set(0, 0, 0);
 
@@ -472,7 +486,7 @@ function createPlane() {
         map: grassTexture.texture, side: THREE.DoubleSide
     });
 
-    const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
+    const geometry = new THREE.PlaneGeometry(PLANE_SIZE, PLANE_SIZE, PLANE_SIZE, PLANE_SIZE);
     const plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -Math.PI / 2; // make it horizontal
 
@@ -484,7 +498,7 @@ function createPlane() {
 function createDome() {
     'use strict';
 
-    let geometry = new THREE.SphereGeometry(100, 32, 32);
+    let geometry = new THREE.SphereGeometry(DOME_SIZE, 32, 32);
     let material = new THREE.MeshPhongMaterial({
         map: skyTexture.texture, side: THREE.BackSide
     });
@@ -809,12 +823,7 @@ function addTrees() {
 function onResize() {
     'use strict';
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    if (window.innerHeight > 0 && window.innerWidth > 0) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    }
+    resize = true;
 }
 
 ///////////////////////
