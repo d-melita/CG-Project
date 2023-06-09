@@ -8,12 +8,13 @@
 */
 
 /* We can toggle the axis helper using the 'H' key */
+/* we can switch between cameras using the '3' key */
 
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
 
-let camera, scene, renderer, controls, perspective_camera;
+let activeCamera, camera, debugCamera, scene, renderer, controls, perspective_camera;
 let skyVar, skyScene, skyTexture, skyCamera;
 let grass, grassScene, grassTexture, grassCamera;
 
@@ -41,13 +42,13 @@ const flowerColors = [WHITE, YELLOW, PURPLE, BLUE];
 const numberOfStars = 500, numberOfFlowers = 200, starRadius = 0.05, flowerRadius = 0.1;
 
 const NUMBER_LIGHTS = 8;
-const PLANE_Y = -10;
+const PLANE_Y = -15;
 const PLANE_SIZE = 100, DOME_SIZE = 100;
 const OVNI_HEIGHT = 20, OVNI_ROTATION_SPEED = 0.05;
 const MOON_HEIGHT = 30, MOON_Z = 15, MOON_RADIUS = 4;
-const HOUSE_Y = -5.5, HOUSE_X = -20;
+const HOUSE_Y = -7, HOUSE_X = -20;
 const numOfTrees = 4;
-const TREE_X = 25, TREE_Z = 25, TREE_Y = -4.5;
+const TREE_X = 25, TREE_Z = 25, TREE_Y = -5.5;
 const TRUNK1_HEIGHT = 5.2, TRUNK1_Y = 3.2, TRUNK1_Z = 1.3;
 const TRUNK2_HEIGHT = 7, TRUNK2_Y = 4.2, TRUNK2_Z = -2;
 const TRUNKS_RADIUS = 1;
@@ -112,6 +113,12 @@ function on1KeyDown() { // 1 key
 function on2KeyDown() { // 2 key
     skyUpdate = true;
     delete keys[50];
+}
+
+function on3KeyDown() { // 3 key
+    if (activeCamera == camera) activeCamera = debugCamera;
+    else if (activeCamera == debugCamera) activeCamera = camera;
+    delete keys[51];
 }
 
 function on6KeyDown() { // 6 key
@@ -231,7 +238,7 @@ function render() {
 
     //renderer.render(skyScene, skyCamera);
     //renderer.render(grassScene, grassCamera);
-    renderer.render(scene, camera);
+    renderer.render(scene, activeCamera);
 }
 
 /////////////////////
@@ -370,10 +377,11 @@ function addExtra(obj, numObjects, radius, colors, scene, meshArray, size) {
 
 function createCamera() {
     'use strict';
-    camera = getPerspectiveCamera(40, 40, 40);
-
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    camera = getPerspectiveCamera(70, 40, 70);
+    debugCamera = getPerspectiveCamera(40, 40, 40);
+    controls = new THREE.OrbitControls(debugCamera, renderer.domElement);
     controls.update();
+    activeCamera = camera;
 }
 
 function getPerspectiveCamera(x, y, z) {
@@ -440,7 +448,7 @@ function createPlane() {
 
     const material = new THREE.MeshStandardMaterial({
         displacementMap: displacementMap,
-        displacementScale: 20,
+        displacementScale: 40,
         side: THREE.DoubleSide,
         map: grassTexture.texture
     });
@@ -703,13 +711,8 @@ function addHouse(x, y, z) {
 function addMoon(x, y, z) {
     'use strict';
 
-    let geometry = new THREE.SphereGeometry(MOON_RADIUS, 32, 32);
-    let material = new THREE.MeshStandardMaterial({
-        color: YELLOW, wireframe: false, emissive: YELLOW, emissiveIntensity: 0.8
-    });
-    moon = new THREE.Mesh(geometry, material);
-
-    sceneObjects.push({"active": material});
+    moon = new THREE.Object3D();
+    addSphere(moon, 0, 0, 0, MOON_RADIUS, YELLOW);
     moon.position.set(x, y, z);
     scene.add(moon);
 }
@@ -800,6 +803,9 @@ function onKeyDown(e) {
         case 50: // 2
             keys[50] = on2KeyDown;
             break;
+        case 51: // 3
+            keys[51] = on3KeyDown;
+            break;
 
         // regular keys: change lights and materials
         case 81: // Q
@@ -823,7 +829,6 @@ function onKeyDown(e) {
         case 68: // D
             keys[68] = onDKeyDown;
             break;
-
 
         // case arrow keys: move ovni
         case 37: // left arrow
